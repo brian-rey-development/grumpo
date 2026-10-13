@@ -94,8 +94,23 @@ jobs:
         with:
           persist-credentials: false
 
+      # The runner image ships an older shellcheck than Homebrew, so pin the version
+      # developers run locally to keep scripts/check.sh and CI in agreement.
+      - name: Install shellcheck
+        env:
+          VERSION: v0.11.0
+          SHA256: 8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198
+        run: |
+          archive="shellcheck-$VERSION.linux.x86_64.tar.xz"
+          curl -fsSLO "https://github.com/koalaman/shellcheck/releases/download/$VERSION/$archive"
+          echo "$SHA256  $archive" | sha256sum --check --strict
+          tar -xJf "$archive"
+          echo "$PWD/shellcheck-$VERSION" >> "$GITHUB_PATH"
+
       - name: Lint the shell scripts
-        run: shellcheck -x scripts/*.sh scripts/lib/*.sh
+        run: |
+          shellcheck --version
+          shellcheck -x scripts/*.sh scripts/lib/*.sh
 
   deny:
     name: deny

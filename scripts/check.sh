@@ -27,7 +27,28 @@ check_bindings() {
   esac
 }
 
+on_disk_files() {
+  find . \( -name .git -o -name node_modules -o -name target -o -name dist -o -name .progress -o -name .astro \) -prune \
+    -o \( -type f -o -type l \) -print | sed 's|^\./||'
+}
+
+# macOS resolves file names case-insensitively, so a path that git tracks with a
+# different casing than the file on disk only breaks on the Linux runners.
+check_casing() {
+  local mismatched
+  mismatched="$(LC_ALL=C comm -23 <(git ls-files | LC_ALL=C sort) <(on_disk_files | LC_ALL=C sort) |
+    while IFS= read -r path; do [[ -e "$path" ]] && printf '%s\n' "$path"; done)"
+  [[ -z "$mismatched" ]] && return
+  echo "Git tracks these paths with a different casing than the files on disk:" >&2
+  echo "$mismatched" >&2
+  echo "Fix each one with: git mv -f <tracked path> <path on disk>" >&2
+  exit 1
+}
+
 cd "$ROOT"
+
+gate "file name casing"
+check_casing
 
 gate "shellcheck"
 if command -v shellcheck >/dev/null 2>&1; then
