@@ -1,0 +1,26 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+  class?: string;
+  loading?: 'lazy' | 'eager';
+}
+
+const SCREENSHOT_WIDTH = 1600;
+const SCREENSHOT_HEIGHT = 1025;
+
+const { src, alt, class: className, loading = 'lazy' } = Astro.props;
+---
+
+<img
+  src={src}
+  alt={alt}
+  width={SCREENSHOT_WIDTH}
+  height={SCREENSHOT_HEIGHT}
+  loading={loading}
+  decoding="async"
+  class:list={[
+    'block h-auto w-full overflow-hidden rounded-[1.125rem] border-3 border-ink bg-surface',
+    className,
+  ]}
+/>

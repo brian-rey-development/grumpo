@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/brian-rey-development/grumpo/security/advisories/new
+    about: Report problems with the daemon, the installer or the hosts file privately and not in a public issue.

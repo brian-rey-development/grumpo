@@ -1,0 +1,16 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  height: var(--size-pill-height);
+  padding: 0 var(--space-3) 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-charcoal);
+  color: var(--color-cream);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-semibold);
+}
+
+.lock {
+  color: var(--color-limit);
+}

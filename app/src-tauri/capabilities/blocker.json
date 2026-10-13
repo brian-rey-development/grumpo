@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "blocker",
+  "description": "Grants the block screen window the two commands it needs and its event",
+  "windows": ["blocker"],
+  "permissions": [
+    "allow-get-block-screen",
+    "allow-dismiss-block-screen",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
+  ]
+}

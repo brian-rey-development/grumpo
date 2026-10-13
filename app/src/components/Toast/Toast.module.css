@@ -1,0 +1,29 @@
+.region {
+  position: fixed;
+  inset: auto var(--space-6) var(--space-6);
+  z-index: calc(var(--z-dialog) + 1);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: var(--sheet-max-width);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-tooltip);
+  color: var(--color-on-tooltip);
+  pointer-events: auto;
+}
+
+.text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.toast button {
+  color: var(--color-on-tooltip);
+}

@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in Grumpo does not work the way it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. If this could be a security problem with the daemon, the installer or the hosts file, use the private security advisory link on the issue chooser instead of this form.
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description: Apple menu, About This Mac. Include the chip if you know it.
+      placeholder: macOS 15.1, Apple silicon
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Grumpo version
+      description: Shown in Settings, or in CHANGELOG.md if you built from source.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Only needed when the problem involves sites or tabs.
+      placeholder: Chrome 140, Safari 19
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        The app writes to `~/Library/Logs/Focus` and the daemon writes to `/Library/Logs/Focus`. Paste the relevant lines, and remove any site or app names you would rather not share.
+      render: text

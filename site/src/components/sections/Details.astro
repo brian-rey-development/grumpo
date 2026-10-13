@@ -1,0 +1,18 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { details } from '@/config/content';
+---
+
+<section aria-labelledby="details-title" class="py-24 sm:py-32">
+  <div class="page">
+    <SectionHeading id="details-title" title="Details" />
+    <dl class="mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      {details.map((detail) => (
+        <div class="border-t-3 border-ink pt-5">
+          <dt class="font-display text-xl font-semibold tracking-tight">{detail.title}</dt>
+          <dd class="mt-2 text-ink-soft">{detail.body}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>

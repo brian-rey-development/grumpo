@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <mask id="face">
+      <rect width="64" height="64" fill="#fff"/>
+      <g stroke="#000" stroke-linecap="round" fill="none">
+        <path d="M 15 31 L 28 36" stroke-width="6"/>
+        <path d="M 49 31 L 36 36" stroke-width="6"/>
+        <path d="M 24 52 C 28 47 36 47 40 52" stroke-width="4.5"/>
+      </g>
+      <circle cx="23.5" cy="41" r="3.2" fill="#000"/>
+      <circle cx="40.5" cy="41" r="3.2" fill="#000"/>
+    </mask>
+  </defs>
+  <g fill="#000" mask="url(#face)">
+    <path d="M 9 27 C 3 25 2 18 5 13 C 8 17 12 19 16 19 Z"/>
+    <path d="M 55 27 C 61 25 62 18 59 13 C 56 17 52 19 48 19 Z"/>
+    <path d="M 22 16 L 24 6 L 29 13 L 33 4 L 36 13 L 42 7 L 42 17 Z"/>
+    <path d="M 32 13 C 49 13 59 24 59 39 C 59 53 48 61 32 61 C 16 61 5 53 5 39 C 5 24 15 13 32 13 Z"/>
+  </g>
+</svg>

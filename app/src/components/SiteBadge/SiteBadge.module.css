@@ -1,0 +1,8 @@
+.badge {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--size-icon-regular);
+  height: var(--size-icon-regular);
+  color: var(--color-control);
+}

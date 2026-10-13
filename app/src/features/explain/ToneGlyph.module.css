@@ -1,0 +1,17 @@
+.glyph {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--leading-body);
+  height: var(--leading-body);
+  color: var(--color-focus-text);
+}
+
+.glyph[data-tone='limit'] {
+  color: var(--color-limit-text);
+}
+
+.glyph[data-tone='unlocked'] {
+  color: var(--color-unlocked-text);
+}

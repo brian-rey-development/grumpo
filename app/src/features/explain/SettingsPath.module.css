@@ -1,0 +1,27 @@
+.path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.step {
+  padding: var(--space-0) var(--space-1-5);
+  border-radius: var(--radius-sm);
+  background: var(--color-fill-pressed);
+  color: var(--color-ink);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-caption);
+}
+
+.step:last-child {
+  background: var(--color-focus-tint);
+  color: var(--color-focus-text);
+}
+
+.separator {
+  display: flex;
+  color: var(--color-ink-secondary);
+}

@@ -1,0 +1,49 @@
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-xl);
+}
+
+.icon {
+  flex: none;
+  margin-top: var(--space-0);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-weight: var(--weight-semibold);
+}
+
+.text {
+  color: inherit;
+}
+
+.action {
+  flex: none;
+  align-self: center;
+}
+
+.info {
+  background: var(--color-surface-raised);
+  color: var(--color-ink);
+}
+
+.info .icon {
+  color: var(--color-ink-secondary);
+}
+
+.warning {
+  background: var(--color-focus-tint);
+  color: var(--color-focus-text);
+}
+
+.danger {
+  background: var(--color-limit-tint);
+  color: var(--color-limit-text);
+}

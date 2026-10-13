@@ -1,0 +1,24 @@
+.stepper {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-0);
+  padding: var(--space-0);
+  border-radius: var(--radius-lg);
+  background: var(--color-fill-grouped);
+}
+
+.value {
+  min-width: calc(var(--size-segmented-min-width) + var(--space-2));
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-medium);
+  text-align: center;
+}
+
+.value[aria-disabled='true'] {
+  opacity: var(--opacity-disabled);
+}

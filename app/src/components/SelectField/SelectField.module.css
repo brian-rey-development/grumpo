@@ -1,0 +1,36 @@
+.wrapper {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+.select {
+  height: var(--control-height);
+  padding: 0 var(--space-6) 0 var(--space-2);
+  border: var(--border-width) solid var(--color-control);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  font-variant-numeric: tabular-nums;
+  appearance: none;
+}
+
+.select:focus-visible {
+  border-color: var(--color-accent-strong);
+  outline-offset: 0;
+}
+
+.select:disabled {
+  opacity: var(--opacity-disabled);
+}
+
+.invalid {
+  border-color: var(--color-limit);
+}
+
+.chevron {
+  position: absolute;
+  right: var(--space-2);
+  color: var(--color-ink-secondary);
+  pointer-events: none;
+}

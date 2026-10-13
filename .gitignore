@@ -1,0 +1,15 @@
+/target
+node_modules/
+/dist/
+/app/dist/
+/site/dist/
+.DS_Store
+*.log
+.claude/
+/.progress/
+*.p12
+*.cer
+.env*
+.vercel
+/PROGRESS.md
+/site/.astro/

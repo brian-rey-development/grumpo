@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-relock"
+description = "Enables the relock command without any pre-configured scope."
+commands.allow = ["relock"]
+
+[[permission]]
+identifier = "deny-relock"
+description = "Denies the relock command without any pre-configured scope."
+commands.deny = ["relock"]

@@ -1,0 +1,47 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { questions } from '@/config/content';
+import { asset } from '@/config/site';
+---
+
+<section id="faq" aria-labelledby="faq-title" class="border-t-3 border-ink bg-cream py-24 sm:py-32">
+  <div class="page grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+    <div>
+      <SectionHeading id="faq-title" title="FAQ" />
+      <img
+        src={asset('img/sticker-sleep.webp')}
+        alt=""
+        width="346"
+        height="278"
+        loading="lazy"
+        class="mt-10 hidden w-56 lg:block"
+      />
+    </div>
+    <div class="border-t-3 border-ink">
+      {questions.map((item) => (
+        <details name="faq" class="group border-b-3 border-ink">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 font-display text-xl font-semibold tracking-tight [&::-webkit-details-marker]:hidden">
+            {item.question}
+            <span
+              aria-hidden="true"
+              class="flex size-9 shrink-0 items-center justify-center rounded-full border-3 border-ink bg-raised text-xl leading-none transition-transform duration-300 ease-spring group-open:rotate-45 group-open:bg-orange"
+            >
+              +
+            </span>
+          </summary>
+          <div class="max-w-measure pb-7 text-ink-soft">
+            <p>{item.answer}</p>
+            {item.link && (
+              <a
+                href={item.link.href}
+                class="mt-3 inline-block font-semibold text-ink underline decoration-orange decoration-3 underline-offset-4"
+              >
+                {item.link.label}
+              </a>
+            )}
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>

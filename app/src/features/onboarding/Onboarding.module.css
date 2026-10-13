@@ -1,0 +1,128 @@
+.root {
+  --onboarding-column: calc(var(--sheet-max-width) + var(--space-10) * 4);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-surface);
+}
+
+.drag {
+  flex: none;
+  height: var(--titlebar-height);
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.stage {
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  width: 100%;
+}
+
+.column {
+  grid-area: 1 / 1;
+  width: 100%;
+  max-width: var(--onboarding-column);
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-6) var(--space-8);
+}
+
+.column[data-align='center'] {
+  margin-block: auto;
+}
+
+.footer {
+  position: relative;
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--page-padding);
+}
+
+.footer::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--border-width);
+  background: var(--color-hairline);
+  content: '';
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease-out;
+}
+
+.footer[data-edge='true']::before {
+  opacity: 1;
+}
+
+.back {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.back button {
+  color: var(--color-ink-secondary);
+  font-weight: var(--weight-semibold);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.error {
+  color: var(--color-limit-text);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+.progress {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.segment {
+  position: relative;
+  width: var(--space-4);
+  height: var(--size-track);
+  border-radius: var(--radius-full);
+  background: var(--color-control);
+}
+
+.segment[data-state='done'] {
+  background: var(--color-selection);
+}
+
+.current {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-accent);
+}
+
+.next {
+  min-width: calc(var(--control-height) * 5);
+}
+
+.pending {
+  height: 100%;
+  background: var(--color-surface);
+}
+
+.gate {
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer::before {
+    transition: none;
+  }
+}

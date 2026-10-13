@@ -1,0 +1,88 @@
+name: Site
+
+# Deploys the landing page to GitHub Pages. It defaults to the project URL
+# https://<owner>.github.io/<repo>/. For a custom domain, set the repository variables
+# SITE_DOMAIN (for example grumpo.app); the page then builds at the domain root and
+# ships a CNAME file.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/site.yml'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SITE_URL: ${{ vars.SITE_DOMAIN != '' && format('https://{0}', vars.SITE_DOMAIN) || format('https://{0}.github.io', github.repository_owner) }}
+      SITE_BASE: ${{ vars.SITE_DOMAIN != '' && '/' || format('/{0}/', github.event.repository.name) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: site/package.json
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: site
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        working-directory: site
+        run: pnpm format:check
+
+      - name: Build
+        working-directory: site
+        run: pnpm build
+
+      - name: Add the custom domain
+        if: vars.SITE_DOMAIN != ''
+        env:
+          SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+        run: printf '%s\n' "$SITE_DOMAIN" > site/dist/CNAME
+
+      - name: Upload the Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site/dist
+
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

@@ -1,0 +1,85 @@
+---
+import fredokaLatin from '@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2?url';
+import nunitoLatin from '@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2?url';
+
+import StructuredData from '@/components/seo/StructuredData.astro';
+import '@/styles/global.css';
+import { absolute, asset, site } from '@/config/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  path?: string;
+  indexable?: boolean;
+}
+
+const OG_IMAGE = { path: 'og.png', width: 1200, height: 630 } as const;
+
+const {
+  title = site.title,
+  description = site.description,
+  path = '',
+  indexable = true,
+} = Astro.props;
+
+const canonical = absolute(path, Astro.site);
+const ogImage = absolute(OG_IMAGE.path, Astro.site);
+const robots = indexable
+  ? 'index, follow, max-image-preview:large, max-snippet:-1'
+  : 'noindex, follow';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <meta name="author" content={site.author.name} />
+    <meta name="application-name" content={site.name} />
+    <meta name="apple-mobile-web-app-title" content={site.name} />
+    <link rel="canonical" href={canonical} />
+    <link rel="sitemap" type="application/xml" href={asset('sitemap.xml')} />
+    <link rel="alternate" type="text/plain" title="LLM summary" href={asset('llms.txt')} />
+    <link rel="manifest" href={asset('manifest.webmanifest')} />
+    <meta name="theme-color" content="#fff6ea" />
+    <meta name="color-scheme" content="light" />
+
+    <link rel="preload" as="font" type="font/woff2" href={fredokaLatin} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={nunitoLatin} crossorigin />
+
+    <link rel="icon" href={asset('favicon.ico')} sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href={asset('favicon-32.png')} />
+    <link rel="icon" type="image/png" sizes="16x16" href={asset('favicon-16.png')} />
+    <link rel="apple-touch-icon" href={asset('apple-touch-icon.png')} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content={String(OG_IMAGE.width)} />
+    <meta property="og:image:height" content={String(OG_IMAGE.height)} />
+    <meta property="og:image:alt" content={site.tagline} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={site.tagline} />
+
+    {indexable && <StructuredData />}
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only z-50 font-bold focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:rounded-control focus:border-3 focus:border-ink focus:bg-raised focus:px-4 focus:py-2 focus:shadow-hard"
+    >
+      Skip to content
+    </a>
+    <slot />
+  </body>
+</html>

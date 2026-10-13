@@ -1,0 +1,44 @@
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pair {
+  display: flex;
+  align-items: center;
+  height: var(--control-height);
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-fill-grouped);
+}
+
+.pair > * + * {
+  position: relative;
+}
+
+.pair > * + *::before {
+  position: absolute;
+  inset: var(--space-2) auto var(--space-2) 0;
+  width: var(--border-width);
+  background: var(--color-hairline);
+  content: '';
+}
+
+.pair .step {
+  border-radius: 0;
+  color: var(--color-ink);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.pair .step:hover:not([aria-disabled='true']) {
+  background: var(--color-fill-selected);
+}
+
+.pair .step[aria-disabled='true'] {
+  color: var(--color-control);
+}
+
+.pair .step:active:not([aria-disabled='true']) {
+  background: var(--color-fill-pressed);
+}

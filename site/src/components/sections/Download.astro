@@ -1,0 +1,59 @@
+---
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { installSteps } from '@/config/content';
+import { asset, site } from '@/config/site';
+
+const buildCommand = `git clone ${site.repo}.git
+cd grumpo && scripts/build-release.sh`;
+---
+
+<section id="download" aria-labelledby="download-title" class="py-24 sm:py-32">
+  <div class="page">
+    <div class="flex flex-col items-center text-center">
+      <img
+        src={asset('img/grumpo-desk.webp')}
+        alt="Grumpo at his desk, on duty"
+        width="720"
+        height="620"
+        loading="lazy"
+        class="w-64 sm:w-80"
+      />
+      <h2 id="download-title" class="mt-8 text-display tracking-tight">
+        Download
+      </h2>
+      <p class="mt-4 text-lede text-ink-soft">
+        {`Free and open source. For macOS ${site.minimumMacOS} or later.`}
+      </p>
+      <div class="mt-8">
+        <Button href={site.download} size="lg">
+          <Icon name="apple" class="size-5 -translate-y-px" />
+          Download for Mac
+        </Button>
+      </div>
+    </div>
+
+    <ol class="mt-20 grid gap-10 border-t-3 border-ink pt-12 sm:grid-cols-2 lg:grid-cols-4">
+      {installSteps.map((step, index) => (
+        <li>
+          <span class="flex size-10 items-center justify-center rounded-full border-3 border-ink bg-raised font-display text-lg font-bold">
+            {index + 1}
+          </span>
+          <h3 class="mt-4 text-xl tracking-tight">{step.title}</h3>
+          <p class="mt-2 text-ink-soft">{step.body}</p>
+        </li>
+      ))}
+    </ol>
+
+    <div class="mt-16 grid gap-6 border-t-3 border-ink pt-10 lg:grid-cols-[1fr_1.4fr] lg:items-center">
+      <div>
+        <h3 class="text-2xl tracking-tight">Build it yourself</h3>
+        <p class="mt-2 text-ink-soft">Needs Rust, Node 22 and pnpm.</p>
+      </div>
+      <pre
+        tabindex="0"
+        class="overflow-x-auto rounded-control border-3 border-ink bg-ink p-5 font-mono text-sm leading-relaxed text-on-ink"
+      ><code>{buildCommand}</code></pre>
+    </div>
+  </div>
+</section>

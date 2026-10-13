@@ -1,0 +1,47 @@
+---
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { asset, nav, site } from '@/config/site';
+---
+
+<header
+  data-nav
+  class="sticky top-0 z-40 border-b border-transparent bg-surface/85 backdrop-blur-md transition-colors data-scrolled:border-hairline"
+>
+  <nav aria-label="Main" class="page flex h-header items-center gap-8">
+    <a
+      href={asset('#top')}
+      class="flex items-center gap-2.5 font-display text-2xl font-bold tracking-tight"
+    >
+      <img src={asset('img/icon.webp')} alt="" width="36" height="36" class="size-9" />
+      Grumpo
+    </a>
+    <ul class="hidden items-center gap-7 font-semibold text-ink-soft md:flex">
+      {nav.map((item) => (
+        <li>
+          <a href={asset(item.href)} class="transition-colors hover:text-ink">
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <div class="ml-auto flex items-center gap-4">
+      <a
+        href={site.repo}
+        class="hidden items-center gap-2 font-semibold text-ink-soft transition-colors hover:text-ink sm:flex"
+      >
+        <Icon name="github" />
+        GitHub
+      </a>
+      <Button href={asset('#download')} size="sm">
+        Download
+      </Button>
+    </div>
+  </nav>
+</header>
+
+<script>
+  import { mountNav } from '@/scripts/nav';
+
+  mountNav();
+</script>

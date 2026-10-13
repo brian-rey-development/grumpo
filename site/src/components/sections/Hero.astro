@@ -1,0 +1,40 @@
+---
+import BlockDemo from '@/components/demos/BlockDemo.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { site } from '@/config/site';
+---
+
+<section
+  id="top"
+  aria-labelledby="hero-title"
+  class="relative flex min-h-[calc(100svh-var(--spacing-header))] items-center overflow-hidden"
+>
+  <div
+    class="dot-grid pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 lg:block"
+    aria-hidden="true"
+  ></div>
+  <div class="page relative grid grid-cols-[minmax(0,1fr)] items-center gap-14 py-16 lg:grid-cols-[1.15fr_1fr]">
+    <div>
+      <h1 id="hero-title" class="animate-rise text-hero tracking-tight">
+        <span class="block">Grumpo says no.</span>
+        <span class="block text-red-text">You get things done.</span>
+      </h1>
+      <p class="mt-7 max-w-measure animate-rise text-lede text-ink-soft [animation-delay:80ms]">
+        A strict website and app blocker for Mac. Block distractions on a schedule or with daily
+        limits.
+      </p>
+      <div class="mt-9 flex animate-rise flex-wrap items-center gap-4 [animation-delay:160ms]">
+        <Button href={site.download} size="lg">
+          <Icon name="apple" class="size-5 -translate-y-px" />
+          Download for Mac
+        </Button>
+        <Button href={site.repo} variant="secondary" size="lg">
+          <Icon name="github" />
+          Source code
+        </Button>
+      </div>
+    </div>
+    <BlockDemo />
+  </div>
+</section>

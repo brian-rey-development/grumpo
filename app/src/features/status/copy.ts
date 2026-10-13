@@ -1,0 +1,16 @@
+export const statusCopy = {
+  loadingLabel: 'Loading focus status',
+  openUnlock: 'Opens unlock options',
+  openSettings: 'Opens Settings',
+  free: 'No block active',
+  focusOn: 'Focus on',
+  focusOnUntil: (clock: string) => `Focus on until ${clock}`,
+  limitReached: 'Daily limit reached',
+  limitReachedFor: (names: string) => `Daily limit reached for ${names}`,
+  andMore: (count: number) => ` and ${count.toString()} more`,
+  unlockedUntil: (clock: string) => `Unlocked until ${clock}`,
+  unlockedCountdown: { lead: 'Unlocked, ', trail: ' left' },
+  unlockIn: 'Unlock in ',
+  unlockReady: 'Unlock ready',
+  unlockReadyConfirmBy: (clock: string) => `Unlock ready, confirm by ${clock}`,
+} as const;

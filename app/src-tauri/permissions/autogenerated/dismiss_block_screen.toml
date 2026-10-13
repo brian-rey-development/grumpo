@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-dismiss-block-screen"
+description = "Enables the dismiss_block_screen command without any pre-configured scope."
+commands.allow = ["dismiss_block_screen"]
+
+[[permission]]
+identifier = "deny-dismiss-block-screen"
+description = "Denies the dismiss_block_screen command without any pre-configured scope."
+commands.deny = ["dismiss_block_screen"]

@@ -1,0 +1,82 @@
+---
+import { asset } from '@/config/site';
+import { blockDemo } from '@/config/demo';
+
+const poses = [
+  {
+    state: 'idle',
+    src: 'img/grumpo-arms-crossed.webp',
+    width: 575,
+    height: 631,
+    class: 'w-56 animate-breathe group-data-[state=idle]/demo:block sm:w-64',
+  },
+  {
+    state: 'blocked',
+    src: 'img/grumpo-push.webp',
+    width: 720,
+    height: 533,
+    class: 'w-72 group-data-[state=blocked]/demo:block sm:w-88',
+  },
+  {
+    state: 'allowed',
+    src: 'img/sticker-approve.webp',
+    width: 319,
+    height: 325,
+    class: 'w-52 group-data-[state=allowed]/demo:block sm:w-60',
+  },
+] as const;
+---
+
+<div data-block-demo data-state="idle" class="group/demo mx-auto w-full max-w-md">
+  <div class="relative h-88 sm:h-100">
+    {poses.map((pose) => (
+      <img
+        data-pose={pose.state}
+        src={asset(pose.src)}
+        alt=""
+        width={pose.width}
+        height={pose.height}
+        fetchpriority={pose.state === 'idle' ? 'high' : 'low'}
+        class:list={[
+          'absolute bottom-0 left-1/2 hidden origin-bottom -translate-x-1/2',
+          pose.class,
+        ]}
+      />
+    ))}
+    <div
+      data-bubble
+      class="absolute top-0 right-0 w-max max-w-56 origin-bottom-left sm:right-auto sm:left-1/2 sm:max-w-60 rounded-3xl rounded-bl-md border-3 border-ink bg-raised px-5 py-3 shadow-hard"
+    >
+      <p data-headline role="status" class="font-display text-2xl font-semibold tracking-tight">
+        Go on. Try one.
+      </p>
+      <p
+        data-detail
+        class="mt-1 hidden leading-snug text-ink-soft group-not-data-[state=idle]/demo:block"
+      ></p>
+    </div>
+  </div>
+
+  <div
+    class="mt-8 flex flex-wrap justify-center gap-3"
+    role="group"
+    aria-label="Try to open a site"
+  >
+    {blockDemo.sites.map((host) => (
+      <button
+        type="button"
+        data-site={host}
+        aria-pressed="false"
+        class="press rounded-full border-3 border-ink bg-raised px-4 py-2 font-display text-base font-semibold shadow-hard-sm aria-pressed:bg-orange sm:px-5 sm:text-lg"
+      >
+        {host}
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
+  import { mountBlockDemo } from '@/scripts/block-demo';
+
+  document.querySelectorAll<HTMLElement>('[data-block-demo]').forEach(mountBlockDemo);
+</script>

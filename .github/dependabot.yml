@@ -1,0 +1,66 @@
+# Tauri ships a Rust crate and an npm package that must stay on the same minor version, and the
+# Tauri build refuses to run when they drift. The npm side therefore leads. It groups
+# @tauri-apps/* into one pull request, and the cargo side ignores minor and major bumps for
+# tauri* crates (patches still arrive) so a person bumps the crates and the npm packages together
+# after reading the release notes. The tauri group is listed first because Dependabot assigns a
+# dependency to the first group that matches it.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "tauri*"
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-major
+    groups:
+      tauri-cargo:
+        patterns:
+          - "tauri*"
+      cargo-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /app
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      tauri-npm:
+        patterns:
+          - "@tauri-apps/*"
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      site-npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch

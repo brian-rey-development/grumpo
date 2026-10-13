@@ -1,0 +1,31 @@
+---
+import Footer from '@/components/sections/Footer.astro';
+import Nav from '@/components/sections/Nav.astro';
+import Button from '@/components/ui/Button.astro';
+import { asset, site } from '@/config/site';
+import Base from '@/layouts/Base.astro';
+---
+
+<Base title={`Page not found, ${site.name}`} path="404.html" indexable={false}>
+  <Nav />
+  <main
+    id="main"
+    class="page flex min-h-[70svh] flex-col items-center justify-center py-20 text-center"
+  >
+    <img
+      src={asset('img/grumpo-push.webp')}
+      alt="Grumpo holding up a hand"
+      width="720"
+      height="533"
+      class="w-64 sm:w-80"
+    />
+    <h1 class="mt-8 text-display tracking-tight">Nope. Nothing here.</h1>
+    <p class="mt-4 text-lede text-ink-soft">This page doesn't exist.</p>
+    <div class="mt-8">
+      <Button href={asset('')} size="lg">
+        Back to the home page
+      </Button>
+    </div>
+  </main>
+  <Footer />
+</Base>

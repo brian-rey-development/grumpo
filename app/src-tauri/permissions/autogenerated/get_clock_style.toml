@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-clock-style"
+description = "Enables the get_clock_style command without any pre-configured scope."
+commands.allow = ["get_clock_style"]
+
+[[permission]]
+identifier = "deny-get-clock-style"
+description = "Denies the get_clock_style command without any pre-configured scope."
+commands.deny = ["get_clock_style"]

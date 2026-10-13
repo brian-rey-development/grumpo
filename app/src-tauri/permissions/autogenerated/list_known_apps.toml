@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-list-known-apps"
+description = "Enables the list_known_apps command without any pre-configured scope."
+commands.allow = ["list_known_apps"]
+
+[[permission]]
+identifier = "deny-list-known-apps"
+description = "Denies the list_known_apps command without any pre-configured scope."
+commands.deny = ["list_known_apps"]

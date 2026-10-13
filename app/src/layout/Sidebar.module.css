@@ -1,0 +1,106 @@
+.sidebar {
+  position: relative;
+  z-index: var(--z-sidebar);
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  height: 100%;
+  background: var(--color-charcoal);
+  color: var(--color-cream);
+}
+
+.titlebar {
+  flex: none;
+  height: var(--titlebar-height);
+}
+
+.brand {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--sidebar-icon-inset);
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-title);
+}
+
+.nav {
+  flex: 1;
+  padding: var(--space-8) var(--sidebar-gutter) var(--space-1);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  height: var(--size-nav-item);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--color-on-sidebar-dim);
+  font-size: var(--text-emphasis);
+  font-weight: var(--weight-bold);
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.item:hover:not([aria-current='page']) {
+  background: var(--color-sidebar-hover);
+}
+
+.item[aria-current='page'] {
+  color: var(--color-charcoal);
+}
+
+.item:focus-visible {
+  outline-color: var(--color-accent);
+}
+
+.indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-cream);
+}
+
+.icon {
+  position: relative;
+  flex: none;
+}
+
+.label {
+  position: relative;
+}
+
+.dot {
+  position: relative;
+  width: var(--size-dot);
+  height: var(--size-dot);
+  margin-left: auto;
+  flex: none;
+  border: var(--border-width-strong) solid var(--color-charcoal);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  box-sizing: content-box;
+}
+
+.footer {
+  flex: none;
+  padding: var(--space-3) var(--sidebar-gutter) var(--sidebar-gutter);
+}

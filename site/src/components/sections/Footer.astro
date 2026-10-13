@@ -1,0 +1,46 @@
+---
+import { asset, site } from '@/config/site';
+
+const links = [
+  { label: 'GitHub', href: site.repo },
+  { label: 'Releases', href: site.releases },
+  { label: 'Privacy', href: site.docs.privacy },
+  { label: 'Security', href: site.docs.security },
+] as const;
+---
+
+<footer class="bg-ink text-on-ink">
+  <div class="page flex flex-col gap-10 py-14 sm:flex-row sm:items-end sm:justify-between">
+    <div class="flex items-end gap-5">
+      <img
+        src={asset('img/sticker-wave.webp')}
+        alt=""
+        width="342"
+        height="320"
+        loading="lazy"
+        class="w-24"
+      />
+      <div>
+        <p class="font-display text-2xl font-bold tracking-tight">Grumpo</p>
+        <p class="mt-1 text-on-ink-soft">Grumpo says no. You get things done.</p>
+      </div>
+    </div>
+    <nav aria-label="Footer">
+      <ul class="flex flex-wrap gap-x-7 gap-y-2 font-semibold">
+        {links.map((link) => (
+          <li>
+            <a href={link.href} class="text-on-ink-soft transition-colors hover:text-on-ink">
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+  <div class="page">
+    <p class="border-t border-hairline-on-ink py-6 text-sm text-on-ink-soft">
+      Code under the MIT or Apache 2.0 license. The Grumpo name and mascot are all rights reserved.
+      Made by Brian Rey.
+    </p>
+  </div>
+</footer>

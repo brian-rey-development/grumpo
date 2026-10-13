@@ -1,0 +1,41 @@
+{
+  "name": "grumpo-site",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Landing page for Grumpo, the strict focus blocker for macOS",
+  "license": "MIT OR Apache-2.0",
+  "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@fontsource-variable/fredoka": "5.3.0",
+    "@fontsource-variable/nunito": "5.3.0",
+    "astro": "7.3.5",
+    "motion": "14.1.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "22.20.5",
+    "prettier": "3.9.10",
+    "prettier-plugin-astro": "1.1.0",
+    "prettier-plugin-tailwindcss": "0.8.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

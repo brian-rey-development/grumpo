@@ -1,0 +1,26 @@
+.button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: none;
+  color: var(--color-ink-secondary);
+}
+
+.small {
+  width: var(--control-height-small);
+  height: var(--control-height-small);
+  border-radius: var(--radius-md);
+}
+
+.button:active:not(:disabled) {
+  background: var(--color-fill-pressed);
+}
+
+.button:disabled {
+  opacity: var(--opacity-disabled);
+}

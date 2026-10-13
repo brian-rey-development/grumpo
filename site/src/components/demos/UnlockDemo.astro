@@ -1,0 +1,110 @@
+---
+import { asset } from '@/config/site';
+import { unlockDemo } from '@/config/demo';
+
+const panel = 'hidden flex-col items-start gap-4';
+const action =
+  'press h-11 rounded-control border-3 border-ink px-6 font-display text-lg font-semibold shadow-hard';
+const quiet = 'font-semibold text-ink-soft underline-offset-4 hover:underline';
+---
+
+<div
+  data-unlock-demo
+  data-state="idle"
+  class="group/unlock rounded-sticker border-3 border-ink bg-raised p-7 text-ink shadow-hard-orange sm:p-9 lg:sticky lg:top-28"
+>
+  <div data-panel="idle" class:list={[panel, 'group-data-[state=idle]/unlock:flex']}>
+    <p class="font-display text-2xl font-semibold tracking-tight">
+      reddit.com is blocked until 17:00.
+    </p>
+    <button type="button" data-request class:list={[action, 'bg-orange']}>
+      Request unlock
+    </button>
+  </div>
+
+  <div data-panel="cooling" class:list={[panel, 'group-data-[state=cooling]/unlock:flex']}>
+    <div class="flex w-full items-center gap-5">
+      <img src={asset('img/sticker-hourglass.webp')} alt="" width="390" height="284" class="w-24" />
+      <div>
+        <p class="font-semibold text-orange-strong">Cooling down</p>
+        <p data-cooldown class="font-display text-5xl font-semibold tabular-nums">
+          5:00
+        </p>
+      </div>
+    </div>
+    <div class="h-3 w-full overflow-hidden rounded-full border-2 border-ink bg-track">
+      <div data-progress class="h-full w-full origin-left scale-x-0 bg-orange"></div>
+    </div>
+    <button type="button" data-cancel class={quiet}>
+      Cancel request
+    </button>
+  </div>
+
+  <div data-panel="typing" class:list={[panel, 'group-data-[state=typing]/unlock:flex']}>
+    <label for="unlock-sentence" class="font-semibold">
+      Now type this exactly.
+      <span class="sr-only">{unlockDemo.sentence}</span>
+    </label>
+    <p
+      aria-hidden="true"
+      class="font-display text-xl leading-snug font-medium tracking-tight sm:text-2xl"
+    >
+      {Array.from(unlockDemo.sentence).map((character) => (
+        <span
+          data-char
+          class="text-ink-soft data-[status=bad]:rounded-sm data-[status=bad]:bg-red-tint data-[status=bad]:text-red-text data-[status=next]:shadow-[inset_2px_0_0_var(--color-orange)] data-[status=ok]:text-ink data-[status=ok]:underline data-[status=ok]:decoration-orange data-[status=ok]:decoration-2 data-[status=ok]:underline-offset-4"
+        >
+          {character}
+        </span>
+      ))}
+    </p>
+    <input
+      id="unlock-sentence"
+      data-typed
+      type="text"
+      maxlength={unlockDemo.sentence.length}
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      class="h-12 w-full rounded-control border-3 border-ink bg-raised px-4 font-semibold focus:shadow-hard-sm"
+    />
+    <button type="button" data-give-up class={quiet}>
+      Never mind
+    </button>
+  </div>
+
+  <div data-panel="choosing" class:list={[panel, 'group-data-[state=choosing]/unlock:flex']}>
+    <p id="unlock-length" class="font-display text-2xl font-semibold tracking-tight">
+      Unlock for how long?
+    </p>
+    <div role="group" aria-labelledby="unlock-length" class="flex flex-wrap gap-3">
+      {unlockDemo.unlockMinutes.map((minutes) => (
+        <button type="button" data-minutes={minutes} class:list={[action, 'bg-raised']}>
+          {minutes} min
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div data-panel="unlocked" class:list={[panel, 'group-data-[state=unlocked]/unlock:flex']}>
+    <div class="flex items-center gap-5">
+      <img src={asset('img/sticker-approve.webp')} alt="" width="319" height="325" class="w-20" />
+      <p data-unlocked role="status" class="font-display text-2xl font-semibold tracking-tight"></p>
+    </div>
+    <p id="unlock-next" data-next class="text-ink-soft"></p>
+    <button
+      type="button"
+      data-relock
+      aria-describedby="unlock-next"
+      class:list={[action, 'bg-orange']}
+    >
+      Relock now
+    </button>
+  </div>
+</div>
+
+<script>
+  import { mountUnlockDemo } from '@/scripts/unlock-demo';
+
+  document.querySelectorAll<HTMLElement>('[data-unlock-demo]').forEach(mountUnlockDemo);
+</script>

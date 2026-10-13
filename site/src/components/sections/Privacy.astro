@@ -1,0 +1,93 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { site } from '@/config/site';
+
+const neverStored = [
+  'Full URLs',
+  'Page titles',
+  'Search queries',
+  'Window titles',
+  'Keystrokes',
+  'Screenshots',
+] as const;
+
+const storedRow = [
+  { label: 'App', value: 'Safari' },
+  { label: 'Site', value: 'youtube.com' },
+  { label: 'From', value: '09:41' },
+  { label: 'To', value: '10:22' },
+] as const;
+
+const trimmed =
+  'inline-block max-w-[26ch] overflow-hidden align-bottom whitespace-nowrap text-ink-soft transition-[max-width,opacity] duration-700 ease-spring group-data-revealed/url:max-w-0 group-data-revealed/url:opacity-0';
+---
+
+<section
+  id="privacy"
+  aria-labelledby="privacy-title"
+  class="border-y-3 border-ink bg-cream py-24 sm:py-32"
+>
+  <div class="page grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
+    <SectionHeading id="privacy-title" title="Privacy">
+      <p>Grumpo saves the app, the domain and the time. Nothing else, and only on your Mac.</p>
+      <p>No account, no tracking, no network calls.</p>
+      <p>
+        <a
+          href={site.docs.privacy}
+          class="font-semibold text-ink underline decoration-orange decoration-3 underline-offset-4"
+        >
+          See exactly what's stored
+        </a>
+      </p>
+    </SectionHeading>
+
+    <div class="rounded-sticker border-3 border-ink bg-raised p-6 shadow-hard sm:p-8">
+      <h3 id="privacy-sees" class="font-body text-sm font-semibold text-ink-soft">
+        Your browser sees
+      </h3>
+      <p
+        data-reveal
+        aria-labelledby="privacy-sees"
+        class="group/url mt-2 flex flex-wrap items-baseline font-mono text-[0.9375rem] sm:text-base"
+      >
+        <span class={trimmed}>https://www.</span>
+        <span class="rounded-md px-0.5 transition-colors delay-500 duration-500 group-data-revealed/url:bg-orange-tint group-data-revealed/url:font-bold">
+          youtube.com
+        </span>
+        <span class={trimmed}>/watch?v=dQw4w9WgXcQ&amp;t=42</span>
+      </p>
+
+      <h3 id="privacy-saves" class="mt-7 font-body text-sm font-semibold text-ink-soft">
+        Grumpo saves
+      </h3>
+      <dl
+        aria-labelledby="privacy-saves"
+        class="mt-2 grid grid-cols-2 gap-0.5 overflow-hidden rounded-control border-2 border-ink bg-ink sm:grid-cols-[1fr_1.5fr_1fr_1fr]"
+      >
+        {storedRow.map((cell) => (
+          <div class="bg-raised px-4 py-3">
+            <dt class="text-xs font-semibold text-ink-soft">{cell.label}</dt>
+            <dd class="font-display text-lg font-semibold">{cell.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <h3 id="privacy-never" class="mt-7 font-body text-sm font-semibold text-ink-soft">
+        Never saved
+      </h3>
+      <ul aria-labelledby="privacy-never" class="mt-3 flex flex-wrap gap-2">
+        {neverStored.map((item) => (
+          <li class="rounded-full border-2 border-hairline px-3 py-1 text-sm text-ink-soft line-through decoration-red decoration-2">
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { mountReveals } from '@/scripts/reveal';
+
+  mountReveals();
+</script>

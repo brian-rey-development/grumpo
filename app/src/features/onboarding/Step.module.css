@@ -1,0 +1,244 @@
+.step {
+  --pose-height: var(--size-mascot-empty);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: center;
+}
+
+.compact {
+  --pose-height: var(--size-mascot-badge);
+
+  display: grid;
+  grid-template-columns: auto minmax(0, auto);
+  justify-content: center;
+  align-items: center;
+  column-gap: var(--space-4);
+  row-gap: var(--space-1);
+}
+
+.compact > .lede,
+.compact > .content {
+  grid-column: 1 / -1;
+}
+
+.compact > .heading {
+  text-align: left;
+}
+
+.heading {
+  font-family: var(--font-display);
+  font-size: var(--text-onboarding-headline);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.heading:focus-visible {
+  outline: none;
+}
+
+.lede {
+  max-width: 60ch;
+  color: var(--color-ink-secondary);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  text-wrap: pretty;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  margin-top: var(--space-6);
+  text-align: left;
+}
+
+.centered {
+  align-items: center;
+  text-align: center;
+}
+
+.lockup {
+  --lockup-width: var(--size-onboarding-lockup);
+  --pose-height: calc(var(--lockup-width) * 0.32);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.wordmark {
+  width: calc(var(--lockup-width) * 0.6);
+  height: auto;
+}
+
+.tagline {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-display);
+  font-size: var(--text-headline);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-headline);
+}
+
+.taglineAccent {
+  color: var(--color-limit-text);
+}
+
+.descriptor {
+  color: var(--color-ink-secondary);
+}
+
+.start {
+  margin-top: var(--space-4);
+}
+
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin: 0;
+}
+
+.point {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.pointIcon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--leading-body);
+  height: var(--leading-body);
+  color: var(--color-ink);
+}
+
+.pointText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pointTitle {
+  font-size: var(--text-emphasis);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-emphasis);
+}
+
+.pointBody {
+  color: var(--color-ink-secondary);
+  line-height: var(--leading-body);
+}
+
+.objectPoint {
+  align-items: center;
+}
+
+.object {
+  flex: none;
+  width: var(--size-icon-large);
+  height: var(--size-icon-large);
+  stroke: var(--color-ink);
+  stroke-linejoin: round;
+}
+
+.fillBlock {
+  fill: var(--color-accent);
+}
+
+.fillLight {
+  fill: var(--color-cream);
+}
+
+.fillLimit {
+  fill: var(--color-limit);
+}
+
+.fillUnlock {
+  fill: var(--color-unlocked-bright);
+}
+
+.shackle {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.keyhole {
+  fill: var(--color-ink);
+  stroke: none;
+}
+
+.rule {
+  margin-left: calc(var(--size-icon-large) + var(--space-4));
+}
+
+.columnTitle {
+  margin-bottom: var(--space-4);
+  color: var(--color-ink-secondary);
+  font-size: var(--text-caption);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-caption);
+}
+
+.note {
+  display: block;
+  color: var(--color-ink-secondary);
+  font-size: var(--text-caption);
+  line-height: var(--leading-body);
+}
+
+.poseBox {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+  height: var(--pose-height);
+}
+
+.pose {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.slot {
+  display: flex;
+  justify-content: flex-end;
+  min-width: calc(var(--control-height) * 5);
+}
+
+.recap {
+  width: 100%;
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--leading-body);
+  height: var(--leading-body);
+  color: var(--color-ink-secondary);
+}
+
+.mark[data-done='true'] {
+  color: var(--color-unlocked-text);
+}

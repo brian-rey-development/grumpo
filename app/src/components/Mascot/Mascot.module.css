@@ -1,0 +1,19 @@
+.mascot {
+  flex: none;
+  object-fit: contain;
+}
+
+.badge {
+  width: calc(var(--size-mascot-badge) * var(--mascot-aspect));
+  height: var(--size-mascot-badge);
+}
+
+.empty {
+  width: calc(var(--size-mascot-empty) * var(--mascot-aspect));
+  height: var(--size-mascot-empty);
+}
+
+.takeover {
+  width: calc(var(--size-mascot-takeover) * var(--takeover-aspect));
+  height: var(--size-mascot-takeover);
+}

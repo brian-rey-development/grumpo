@@ -1,0 +1,7 @@
+.tile {
+  flex: none;
+  width: var(--size-logo-tile);
+  height: var(--size-logo-tile);
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}

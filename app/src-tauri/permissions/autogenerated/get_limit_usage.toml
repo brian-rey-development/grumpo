@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-limit-usage"
+description = "Enables the get_limit_usage command without any pre-configured scope."
+commands.allow = ["get_limit_usage"]
+
+[[permission]]
+identifier = "deny-get-limit-usage"
+description = "Denies the get_limit_usage command without any pre-configured scope."
+commands.deny = ["get_limit_usage"]

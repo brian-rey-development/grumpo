@@ -1,0 +1,10 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.stack[data-stale] {
+  opacity: var(--opacity-dim);
+}

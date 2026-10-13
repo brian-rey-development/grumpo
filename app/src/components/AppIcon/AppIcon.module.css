@@ -1,0 +1,26 @@
+.icon {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--size-icon-regular);
+  height: var(--size-icon-regular);
+}
+
+.glyph {
+  color: var(--color-control);
+}
+
+.image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+
+.image[data-ready] {
+  opacity: 1;
+}

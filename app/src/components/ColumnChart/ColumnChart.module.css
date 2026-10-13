@@ -1,0 +1,118 @@
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.plot {
+  position: relative;
+  height: var(--size-chart-height);
+}
+
+.plot[data-size='tall'] {
+  height: var(--size-chart-height-tall);
+}
+
+.bands {
+  position: absolute;
+  inset: 0;
+}
+
+.band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-focus-tint);
+  box-shadow: inset 0 var(--border-width-strong) 0 var(--color-focus);
+}
+
+.columns {
+  position: relative;
+  padding-top: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(var(--column-count), 1fr);
+  gap: var(--size-chart-gap);
+  height: 100%;
+}
+
+.column {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.column:hover,
+.column[data-focused] {
+  background: var(--color-fill-grouped);
+}
+
+.bar {
+  display: block;
+  width: 100%;
+  max-width: var(--size-bar-max);
+  height: 100%;
+  border-radius: var(--radius-bar);
+  background: var(--color-bar);
+}
+
+.bar[data-empty] {
+  background: var(--color-track);
+}
+
+.column[data-highlight] .bar {
+  border: var(--border-width-strong) solid var(--color-ink);
+  background: var(--color-accent);
+}
+
+.reference {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 0;
+  border-top: var(--border-width-strong) dashed var(--color-ink-secondary);
+  pointer-events: none;
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--color-ink-secondary);
+  pointer-events: none;
+}
+
+.axis {
+  position: relative;
+  height: var(--leading-caption);
+  color: var(--color-ink-secondary);
+  font-family: var(--font-numeric);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.axis[data-captions] {
+  height: calc(var(--leading-caption) * 2);
+}
+
+.tick {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+}
+
+.tick[data-align='center'] {
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.caption {
+  color: var(--color-ink);
+  font-weight: var(--weight-medium);
+}

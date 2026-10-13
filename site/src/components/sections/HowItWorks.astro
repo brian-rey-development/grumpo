@@ -1,0 +1,70 @@
+---
+import ScreenFrame from '@/components/ui/ScreenFrame.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { tourSteps } from '@/config/content';
+import { asset } from '@/config/site';
+---
+
+<section id="how" aria-labelledby="how-title" class="border-t-3 border-ink bg-cream py-24 sm:py-32">
+  <div class="page" data-tour>
+    <SectionHeading id="how-title" title="How it works" />
+
+    <div role="tablist" aria-label="Steps" class="mt-12 grid gap-4 md:grid-cols-3">
+      {tourSteps.map((step, index) => (
+        <button
+          type="button"
+          role="tab"
+          id={`tab-${step.id}`}
+          aria-controls={`panel-${step.id}`}
+          aria-selected={index === 0 ? 'true' : 'false'}
+          tabindex={index === 0 ? 0 : -1}
+          data-tab={step.id}
+          class="group/tab flex gap-4 rounded-sticker border-3 border-transparent p-5 text-left transition-colors hover:border-ink/20 aria-selected:border-ink aria-selected:bg-raised aria-selected:shadow-hard"
+        >
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-full border-3 border-ink bg-raised font-display text-lg font-bold group-aria-selected/tab:bg-orange">
+            {index + 1}
+          </span>
+          <span>
+            <span class="block font-display text-xl font-semibold tracking-tight">
+              {step.title}
+            </span>
+            <span class="mt-1 block text-ink-soft">{step.body}</span>
+          </span>
+        </button>
+      ))}
+    </div>
+
+    <div class="relative mx-auto mt-12 max-w-5xl">
+      {tourSteps.map((step, index) => (
+        <div
+          role="tabpanel"
+          id={`panel-${step.id}`}
+          aria-labelledby={`tab-${step.id}`}
+          data-panel={step.id}
+          hidden={index !== 0}
+        >
+          <ScreenFrame
+            src={asset(step.screenshot.src)}
+            alt={step.screenshot.alt}
+            loading={index === 0 ? 'eager' : 'lazy'}
+            class="shadow-hard-lg"
+          />
+          <img
+            src={asset(step.mascot.src)}
+            alt=""
+            width={step.mascot.width}
+            height={step.mascot.height}
+            loading="lazy"
+            class="absolute -right-4 -bottom-10 hidden w-40 sm:block lg:-right-16 lg:w-52"
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { mountTour } from '@/scripts/tour';
+
+  document.querySelectorAll<HTMLElement>('[data-tour]').forEach(mountTour);
+</script>

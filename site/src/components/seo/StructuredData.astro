@@ -1,0 +1,87 @@
+---
+import { installSteps, questions, tourSteps } from '@/config/content';
+import { absolute, site } from '@/config/site';
+
+const home = absolute('', Astro.site);
+const authorId = `${home}#author`;
+
+const author = {
+  '@type': 'Person',
+  '@id': authorId,
+  name: site.author.name,
+  url: site.author.url,
+};
+
+const website = {
+  '@type': 'WebSite',
+  '@id': `${home}#website`,
+  url: home,
+  name: site.name,
+  description: site.description,
+  inLanguage: 'en',
+  publisher: { '@id': authorId },
+};
+
+const app = {
+  '@type': 'SoftwareApplication',
+  '@id': `${home}#app`,
+  name: site.name,
+  description: site.description,
+  slogan: site.tagline,
+  url: home,
+  image: absolute('img/icon.webp', Astro.site),
+  screenshot: tourSteps.map((step) => absolute(step.screenshot.src, Astro.site)),
+  applicationCategory: 'UtilitiesApplication',
+  applicationSubCategory: 'Website and app blocker',
+  operatingSystem: `macOS ${site.minimumMacOS} or later`,
+  downloadUrl: site.download,
+  installUrl: site.download,
+  license: 'https://opensource.org/licenses/MIT',
+  isAccessibleForFree: true,
+  keywords: site.keywords.join(', '),
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  author: { '@id': authorId },
+  sameAs: [site.repo],
+};
+
+const sourceCode = {
+  '@type': 'SoftwareSourceCode',
+  name: `${site.name} source code`,
+  codeRepository: site.repo,
+  programmingLanguage: ['Rust', 'TypeScript'],
+  license: 'https://opensource.org/licenses/MIT',
+  targetProduct: { '@id': `${home}#app` },
+};
+
+const faq = {
+  '@type': 'FAQPage',
+  '@id': `${home}#faq`,
+  mainEntity: questions.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+};
+
+const howTo = {
+  '@type': 'HowTo',
+  '@id': `${home}#install`,
+  name: `How to install ${site.name} on a Mac`,
+  totalTime: 'PT5M',
+  tool: [{ '@type': 'HowToTool', name: `A Mac running macOS ${site.minimumMacOS} or later` }],
+  step: installSteps.map((step, index) => ({
+    '@type': 'HowToStep',
+    position: index + 1,
+    name: step.title,
+    text: step.body,
+    url: `${home}#download`,
+  })),
+};
+
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': [website, author, app, sourceCode, faq, howTo],
+};
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(graph)} />

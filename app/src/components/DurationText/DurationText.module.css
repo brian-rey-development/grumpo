@@ -1,0 +1,20 @@
+.duration {
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.group {
+  display: inline;
+}
+
+.group + .group {
+  margin-left: var(--duration-group-gap);
+}
+
+.unit {
+  color: var(--color-ink-secondary);
+  font-size: max(calc(1em * var(--unit-scale)), var(--unit-min-size));
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+}

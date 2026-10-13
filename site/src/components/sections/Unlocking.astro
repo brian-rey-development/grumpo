@@ -1,0 +1,55 @@
+---
+import UnlockDemo from '@/components/demos/UnlockDemo.astro';
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { unlockDemo } from '@/config/demo';
+
+const longest = Math.max(...unlockDemo.cooldowns.map((rung) => rung.minutes));
+---
+
+<section
+  id="unlock"
+  aria-labelledby="unlock-title"
+  data-unlocking
+  class="bg-ink py-24 text-on-ink sm:py-32"
+>
+  <div class="page grid items-start gap-14 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
+    <div>
+      <SectionHeading id="unlock-title" title="Unlocking" tone="ink">
+        <p>To loosen a rule early, wait for the timer, then type a sentence.</p>
+        <p>Each unlock today waits twice as long as the last.</p>
+      </SectionHeading>
+
+      <ol class="mt-12 space-y-5" aria-label="Wait before each unlock">
+        {unlockDemo.cooldowns.map((rung, index) => (
+          <li
+            data-ladder-step={index}
+            data-status={index === 0 ? 'current' : 'later'}
+            aria-current={index === 0 ? 'step' : undefined}
+            class="group/rung"
+          >
+            <div class="flex items-baseline justify-between gap-4 text-on-ink-soft transition-colors group-data-[status=current]/rung:text-on-ink">
+              <span class="font-semibold">{rung.label}</span>
+              <span class="font-display text-xl font-semibold tabular-nums">
+                {rung.minutes} min
+              </span>
+            </div>
+            <div class="mt-2 h-3 rounded-full bg-ink-raised">
+              <div
+                class="h-full rounded-full bg-on-ink-soft/30 transition-colors group-data-[status=current]/rung:bg-orange group-data-[status=done]/rung:bg-on-ink-soft/60"
+                style={`width: ${(rung.minutes / longest) * 100}%`}
+              />
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    <UnlockDemo />
+  </div>
+</section>
+
+<script>
+  import { mountLadder } from '@/scripts/ladder';
+
+  document.querySelectorAll<HTMLElement>('[data-unlocking]').forEach(mountLadder);
+</script>
