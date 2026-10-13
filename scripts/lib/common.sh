@@ -74,7 +74,8 @@ resolve_owner() {
   [[ "$OWNER_UID" -ne 0 ]] || fail "refusing to use root as the owner, pass --owner <user|uid> for your normal account"
   local owner_name
   owner_name="$(id -un "$OWNER_UID" 2>/dev/null)" || fail "no user has uid $OWNER_UID"
-  OWNER_HOME="$(home_directory_of "$owner_name")" && [[ -n "$OWNER_HOME" ]] || fail "cannot find the home directory of $owner_name"
+  OWNER_HOME="$(home_directory_of "$owner_name")" || fail "cannot find the home directory of $owner_name"
+  [[ -n "$OWNER_HOME" ]] || fail "cannot find the home directory of $owner_name"
 }
 
 INSTALL_LOCK_HELD=0
