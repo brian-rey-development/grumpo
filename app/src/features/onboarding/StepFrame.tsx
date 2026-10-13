@@ -30,12 +30,25 @@ export function StepFrame({
     headingRef.current?.focus({ preventScroll: true });
   }, []);
 
+  const heading = (
+    <h1 ref={headingRef} className={styles.heading} tabIndex={-1}>
+      {title}
+    </h1>
+  );
+
   return (
     <section className={cx(styles.step, compact && styles.compact)}>
-      {hero}
-      <h1 ref={headingRef} className={styles.heading} tabIndex={-1}>
-        {title}
-      </h1>
+      {compact ? (
+        <div className={styles.header}>
+          {hero}
+          {heading}
+        </div>
+      ) : (
+        <>
+          {hero}
+          {heading}
+        </>
+      )}
       {lede === undefined ? null : (
         <p className={styles.lede} data-selectable>
           {lede}

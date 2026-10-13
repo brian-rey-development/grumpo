@@ -6,6 +6,7 @@ import { Skeleton, SKELETON_WIDTH } from '@/components/Skeleton/Skeleton';
 import { commonCopy } from '@/copy/common';
 import { describeFailure } from '@/copy/failures';
 import { settingsCopy } from '@/features/settings/copy';
+import { FirefoxRow } from '@/features/settings/FirefoxRow';
 import { PermissionRow } from '@/features/settings/PermissionRow';
 import { useRefreshOnFocus } from '@/features/settings/useRefreshOnFocus';
 import type { BrowserAccess } from '@/ipc/generated/BrowserAccess';
@@ -41,6 +42,10 @@ function rowsOf(permissions: Permissions): Row[] {
     status: permissions.accessibility,
   };
   return [accessibility, ...browsers];
+}
+
+function hasFirefox(permissions: Permissions): boolean {
+  return permissions.browsers.some((entry) => entry.browser === 'firefox' && entry.installed);
 }
 
 function Placeholder({ query }: { query: ReturnType<typeof usePermissions> }) {
@@ -85,6 +90,7 @@ export function PermissionsSection({ variant = 'section' }: PermissionsSectionPr
       {rowsOf(query.data).map((row) => (
         <PermissionRow key={row.key} name={row.name} kind={row.kind} status={row.status} />
       ))}
+      {hasFirefox(query.data) ? <FirefoxRow accessibility={query.data.accessibility} /> : null}
     </Section>
   );
 }

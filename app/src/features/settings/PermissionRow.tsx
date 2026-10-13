@@ -39,8 +39,8 @@ function StateBadge({ status }: { status: PermissionStatus }) {
 
 function stateNote(status: PermissionStatus, kind: PermissionKind, name: string): string | null {
   if (status === 'notRunning') return copy.notRunning(name);
-  if (status === 'denied' && kind.kind === 'automation') return copy.deniedHint.browser;
-  return null;
+  if (status !== 'denied') return null;
+  return kind.kind === 'automation' ? copy.deniedHint.browser : copy.deniedHint.accessibility;
 }
 
 /** A browser that is denied is changed in System Settings only, but Accessibility can be asked for again. */

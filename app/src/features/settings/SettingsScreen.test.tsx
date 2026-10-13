@@ -368,7 +368,7 @@ describe('permissions', () => {
     expect(screen.queryByText('Brave')).toBeNull();
   });
 
-  it('hides a browser that has nothing to allow, such as Firefox, which Grumpo reads through Accessibility', async () => {
+  it('shows Firefox as covered by Accessibility, with nothing of its own to allow', async () => {
     install({
       permissions: {
         accessibility: 'granted',
@@ -382,10 +382,27 @@ describe('permissions', () => {
     renderSettings();
 
     const list = await screen.findByRole('list', { name: 'Permissions' });
+    const rows = within(list).getAllByRole('listitem');
+    const firefox = rows.find((row) => within(row).queryByText('Firefox') !== null);
 
-    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.queryByText('Firefox')).toBeNull();
+    expect(rows).toHaveLength(3);
+    expect(firefox?.textContent).toContain('Covered by Accessibility');
+    expect(firefox?.querySelector('button')).toBeNull();
     expect(screen.queryByText('Not available on this Mac')).toBeNull();
+  });
+
+  it('asks for Accessibility on the Firefox row while Accessibility is not allowed', async () => {
+    install({
+      permissions: {
+        accessibility: 'denied',
+        browsers: [{ browser: 'firefox', installed: true, permission: 'unsupported' }],
+      },
+    });
+    renderSettings();
+
+    const list = await screen.findByRole('list', { name: 'Permissions' });
+
+    expect(within(list).getByText('Needs Accessibility')).toBeTruthy();
   });
 
   it('shows each state in words with the matching action', async () => {

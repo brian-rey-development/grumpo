@@ -11,21 +11,21 @@
 
 .compact {
   --pose-height: var(--size-mascot-badge);
+}
 
-  display: grid;
-  grid-template-columns: auto minmax(0, auto);
-  justify-content: center;
+/* The header is its own row, so a wide list below cannot stretch the mascot and the heading apart. */
+.header {
+  display: flex;
   align-items: center;
-  column-gap: var(--space-4);
-  row-gap: var(--space-1);
+  justify-content: center;
+  gap: var(--space-4);
 }
 
-.compact > .lede,
-.compact > .content {
-  grid-column: 1 / -1;
+.header > .heading {
+  text-align: left;
 }
 
-.compact > .heading {
+.heading {
   text-align: left;
 }
 

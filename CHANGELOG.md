@@ -36,6 +36,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `install.sh` copies `state.json` only after the old daemon has stopped, so a save made during shutdown is not lost.
 - `resolve_owner` reads home directories through `dscl -plist`, so a home path with spaces is no longer cut short.
 
+### Fixed
+
+- Allow on the Accessibility permission now removes the entry an older build left in System Settings before asking again. Ad hoc signed builds change their code hash on every release, so macOS showed Grumpo as turned on while refusing the new build.
+- The header of the Permissions and Done steps of the welcome no longer splits the mascot from the heading and wraps the heading one word per line when a wide list sits below it.
+- A permission row with two actions stacks them, so its text and the Why Grumpo needs this panel keep most of the row, and the panel now opens and closes with a height animation instead of pushing the list down at once.
+- Firefox appears in the permission list with its status tied to Accessibility, instead of being left out.
+
 ## [0.1.0] - 2026-10-12
 
 ### Added

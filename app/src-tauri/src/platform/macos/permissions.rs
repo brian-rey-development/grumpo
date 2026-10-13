@@ -3,6 +3,8 @@
 use std::process::Command;
 use std::time::Duration;
 
+use objc2_foundation::NSBundle;
+
 use super::os_status::{
     OsStatus, ERR_NOT_PERMITTED, ERR_WOULD_REQUIRE_CONSENT, NO_ERR, PROC_NOT_FOUND,
 };
@@ -12,6 +14,8 @@ use crate::platform::{Browser, Permission, PermissionProbe, PermissionState, Pla
 
 const OPEN: &str = "/usr/bin/open";
 const OPEN_TIMEOUT: Duration = Duration::from_secs(3);
+const TCCUTIL: &str = "/usr/bin/tccutil";
+const ACCESSIBILITY_SERVICE: &str = "Accessibility";
 const ACCESSIBILITY_PANE: &str =
     "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility";
 const AUTOMATION_PANE: &str =
@@ -33,7 +37,12 @@ impl PermissionProbe for MacPermissions {
 
     fn request(&self, permission: Permission) -> PermissionState {
         match permission {
-            Permission::Accessibility => accessibility_state_after(accessibility::request_trust()),
+            Permission::Accessibility => {
+                if !accessibility::is_trusted() {
+                    forget_stale_accessibility_grant();
+                }
+                accessibility_state_after(accessibility::request_trust())
+            }
             Permission::Automation(Browser::Firefox) => PermissionState::Unsupported,
             Permission::Automation(browser) => {
                 let status = apple_events::request_automation(browser.bundle_id());
@@ -60,6 +69,22 @@ impl PermissionProbe for MacPermissions {
             "open settings",
             format!("exit {}", output.status),
         ))
+    }
+}
+
+/// An ad hoc signed build gets a new code hash on every release, so macOS keeps the switch
+/// of an older build turned on in System Settings while refusing this one. Removing the
+/// entry lets the prompt that follows add one that matches this build.
+fn forget_stale_accessibility_grant() {
+    let Some(bundle_id) = NSBundle::mainBundle().bundleIdentifier() else {
+        return;
+    };
+    let mut command = Command::new(TCCUTIL);
+    command.args(["reset", ACCESSIBILITY_SERVICE, &bundle_id.to_string()]);
+    match run_bounded(&mut command, OPEN_TIMEOUT) {
+        Ok(output) if output.status.success() => {}
+        Ok(output) => tracing::warn!(status = %output.status, "tccutil reset failed"),
+        Err(error) => tracing::warn!(?error, "tccutil reset did not run"),
     }
 }
 
