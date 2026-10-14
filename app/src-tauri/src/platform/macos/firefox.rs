@@ -19,6 +19,7 @@ use crate::concurrency::LockExt;
 use crate::platform::{Permission, PlatformError, TabReading};
 
 const READ_BUDGET: Duration = Duration::from_millis(1200);
+const ATTR_ROLE: &str = "AXRole";
 const ATTR_FOCUSED_WINDOW: &str = "AXFocusedWindow";
 const ATTR_VALUE: &str = "AXValue";
 
@@ -58,6 +59,9 @@ impl FirefoxReader {
             return Ok(Some(address));
         }
         *cache = None;
+        // Firefox builds its accessibility tree only once a client asks the application for its
+        // role, so until then every window is empty. The tree arrives by the next read.
+        ax.string(&app, ATTR_ROLE)?;
         let (address, field) = search_and_read(&ax, &window)?;
         *cache = field.map(|field| CachedField {
             pid,

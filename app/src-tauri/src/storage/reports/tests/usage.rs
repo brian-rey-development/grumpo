@@ -10,7 +10,7 @@ fn seconds(store: &Store, target: LimitTarget) -> u32 {
 }
 
 #[test]
-fn site_targets_match_the_domain_and_its_subdomains_only() {
+fn site_targets_match_the_hosts_their_block_covers() {
     let store = store();
     let day = standard_day();
     let chrome = "com.google.Chrome";
@@ -32,7 +32,7 @@ fn site_targets_match_the_domain_and_its_subdomains_only() {
         &store,
         chrome,
         "Chrome",
-        Some("a.b.youtube.com"),
+        Some("music.youtube.com"),
         (day.start + 150, day.start + 160),
     );
     record(
@@ -57,7 +57,7 @@ fn site_targets_match_the_domain_and_its_subdomains_only() {
         (day.start + 560, day.start + 960),
     );
 
-    assert_eq!(seconds(&store, site_target("youtube.com")), 160);
+    assert_eq!(seconds(&store, site_target("youtube.com")), 150);
     assert_eq!(seconds(&store, site_target("m.youtube.com")), 50);
     assert_eq!(seconds(&store, site_target("notyoutube.com")), 300);
 }

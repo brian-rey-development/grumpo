@@ -49,9 +49,17 @@ pub(crate) fn blocked_hosts(sites: &BTreeSet<Domain>) -> BTreeSet<String> {
     sites.iter().flat_map(hosts_of).collect()
 }
 
+/// True when blocking `site` blocks `host`, which is the site itself or one of its aliases. Other
+/// subdomains stay reachable, so anything that acts on a visited host has to agree with this.
+pub fn blocks(site: &Domain, host: &Domain) -> bool {
+    hosts_of(site)
+        .iter()
+        .any(|blocked| blocked == host.as_str())
+}
+
 /// A site and its aliases. Only a registrable domain gets aliases, because a subdomain such as
 /// `m.youtube.com` or `store.steampowered.com` has none of its own.
-fn hosts_of(site: &Domain) -> Vec<String> {
+pub fn hosts_of(site: &Domain) -> Vec<String> {
     let mut hosts = vec![site.to_string()];
     if site.is_registrable() {
         hosts.extend(alias_prefixes(site.as_str()).map(|prefix| format!("{prefix}{site}")));

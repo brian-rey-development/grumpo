@@ -1,7 +1,7 @@
 //! Blocked apps and tabs: which ones to act on, and what to tell the person about it.
 
 use focus_core::ipc::{DaemonStatus, EnforcementReason, UnlockPhaseView};
-use focus_core::{is_protected, AppRef, Domain, LimitTarget};
+use focus_core::{hosts, is_protected, AppRef, Domain, LimitTarget};
 
 use super::{permitted, PolicyInput};
 use crate::dto::BlockReason;
@@ -91,9 +91,7 @@ fn tab_actions(
     status: &DaemonStatus,
     activity: &Activity,
 ) -> Option<Vec<Action>> {
-    let browser = activity
-        .browser
-        .filter(|browser| browser.can_close_tabs())?;
+    let browser = activity.browser?;
     let domain = activity.domain.as_ref()?;
     let rule = covering_rule(status, domain)?;
     let cause = site_cause(status, domain);
@@ -101,21 +99,20 @@ fn tab_actions(
         return Some(Vec::new());
     }
     let terms = terms(input, status, cause);
-    Some(permitted(
-        input,
-        [
-            Action::CloseTab {
-                browser,
-                domain: domain.clone(),
-            },
-            Action::Notify(NoticeKind::SiteBlocked {
-                domain: rule.clone(),
-                until: terms.until,
-                reason: terms.reason,
-                strict: terms.strict,
-            }),
-        ],
-    ))
+    let notice = Action::Notify(NoticeKind::SiteBlocked {
+        domain: rule.clone(),
+        until: terms.until,
+        reason: terms.reason,
+        strict: terms.strict,
+    });
+    if !browser.can_close_tabs() {
+        return Some(permitted(input, [notice]));
+    }
+    let close = Action::CloseTab {
+        browser,
+        domain: domain.clone(),
+    };
+    Some(permitted(input, [close, notice]))
 }
 
 fn covering_rule<'a>(status: &'a DaemonStatus, visited: &Domain) -> Option<&'a Domain> {
@@ -123,7 +120,7 @@ fn covering_rule<'a>(status: &'a DaemonStatus, visited: &Domain) -> Option<&'a D
         .enforcement
         .blocked_sites
         .iter()
-        .find(|rule| rule.covers(visited))
+        .find(|rule| hosts::blocks(rule, visited))
 }
 
 fn stale(input: &PolicyInput<'_>, cause: Cause) -> bool {
@@ -154,11 +151,11 @@ fn site_cause(status: &DaemonStatus, visited: &Domain) -> Cause {
                 .rules
                 .blocked_sites
                 .iter()
-                .any(|rule| rule.covers(visited)),
+                .any(|rule| hosts::blocks(rule, visited)),
         exhausted: status
             .exhausted
             .iter()
-            .any(|target| matches!(target, LimitTarget::Site { domain } if domain.covers(visited))),
+            .any(|target| matches!(target, LimitTarget::Site { domain } if hosts::blocks(domain, visited))),
     }
 }
 

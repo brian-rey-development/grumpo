@@ -247,6 +247,28 @@ fn every_site_with_aliases_of_its_own_has_a_vector() {
 }
 
 #[test]
+fn a_site_blocks_exactly_the_hosts_it_is_written_with() {
+    let vectors: HostsVectors = serde_json::from_str(HOSTS_VECTORS).unwrap();
+    for (site, expected) in vectors.hosts {
+        let site = Domain::parse(&site).unwrap();
+        for host in &expected {
+            assert!(
+                blocks(&site, &Domain::parse(host).unwrap()),
+                "{site} {host}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_site_leaves_its_other_subdomains_reachable() {
+    let youtube = Domain::parse("youtube.com").unwrap();
+    for host in ["music.youtube.com", "studio.youtube.com", "notyoutube.com"] {
+        assert!(!blocks(&youtube, &Domain::parse(host).unwrap()), "{host}");
+    }
+}
+
+#[test]
 fn blocked_hosts_are_the_union_over_all_sites() {
     let hosts = blocked_hosts(&sites(&["a.com", "m.a.com", "shop.a.com"]));
     let expected: BTreeSet<String> = ["a.com", "www.a.com", "m.a.com", "shop.a.com"]

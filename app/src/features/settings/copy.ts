@@ -52,7 +52,7 @@ export const settingsCopy = {
       covered: 'Covered by Accessibility',
       needsAccessibility: 'Needs Accessibility',
       detail:
-        "Grumpo reads the site of the tab you're on in Firefox through Accessibility, so there's nothing else to allow. It can't close Firefox tabs, but blocked sites still won't load.",
+        "Grumpo reads the site of the tab you're on in Firefox through Accessibility, so there's nothing else to allow. Blocked sites won't load, and Grumpo's screen covers them, but the tab stays open.",
     },
     loadFailed: "Grumpo couldn't read its permissions.",
     actionFailed: (name: string) => `${name} couldn't be changed.`,

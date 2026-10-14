@@ -32,6 +32,7 @@ impl Browser {
         }
     }
 
+    /// Whether Grumpo can close its tabs, which takes `AppleScript` that Firefox does not offer.
     pub fn can_close_tabs(self) -> bool {
         !matches!(self, Self::Firefox)
     }

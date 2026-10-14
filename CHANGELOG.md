@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Grumpo reads the site you're on in Firefox. Firefox builds the interface tree that Accessibility reads only after an app asks for its role, which Grumpo never did, so every Firefox window looked empty, Firefox time was counted per app only and blocked sites in Firefox were left to the hosts file alone.
+- Closing tabs and counting daily limits follow the hosts file. A rule for youtube.com closes youtube.com, www.youtube.com and m.youtube.com, and leaves music.youtube.com open and outside the YouTube limit, where before the app closed any subdomain and counted it toward the limit.
+
+### Changed
+
+- A blocked site in Firefox brings up Grumpo's block screen, as in the other browsers. The Firefox tab stays open, because Firefox offers no reliable way for another app to close or redirect a tab, and the hosts block keeps the site from loading. Before, Firefox showed its no connection page, or a saved copy of the site, and Grumpo did nothing.
+- The block screen centers Grumpo and groups the time left and the strict mode note in one card, with the button as wide as the card.
+
 ## [0.1.1] - 2026-10-14
 
 ### Added

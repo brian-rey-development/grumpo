@@ -67,7 +67,7 @@ macOS gates the signals Grumpo needs behind two permissions, and the Settings sc
 
 | Permission | Why it is needed | When it is requested |
 |---|---|---|
-| Accessibility | Firefox does not expose its active tab to scripting, so Grumpo reads the URL field of the focused window through the Accessibility API as a best effort. | When the person presses the grant button for it in Settings |
+| Accessibility | Firefox does not expose its active tab to scripting, so Grumpo reads the URL field of the focused window through the Accessibility API as a best effort. Asking Firefox for its role switches on its accessibility tree, as any assistive app does. | When the person presses the grant button for it in Settings |
 | Automation (per browser) | Chrome, Brave, Edge and Safari report the active tab address through AppleScript, and macOS asks for consent once per browser. | When the person presses the grant button for that browser in Settings |
 
 Grumpo never lets macOS surprise the person with a consent dialog from a background poll. Before it runs a script against a browser it asks the system for the Automation state, which does not prompt, and it caches the answer for 30 seconds. While consent has not been given the script is skipped and the browser is reported as needing consent, and if consent was refused it is reported as denied. The dialog only appears when the person asks for it from Settings.

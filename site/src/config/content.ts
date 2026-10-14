@@ -98,7 +98,10 @@ export const questions: readonly Question[] = [
     answer:
       'Only to check GitHub for updates once a day, and to download one when there is one. It sends nothing about you. You can turn it off in Settings.',
   },
-  { question: 'Does it work with Firefox?', answer: "Sites are blocked. Tabs can't be closed." },
+  {
+    question: 'Does it work with Firefox?',
+    answer: "Yes. Blocked sites won't load and Grumpo's screen shows up. Tabs stay open.",
+  },
   {
     question: 'What about other accounts on my Mac?',
     answer: 'Sites are blocked for everyone. Only you can change the rules.',
