@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-14
+
 ### Added
 
 - Grumpo updates itself. Two minutes after it starts and then once a day it checks the latest GitHub release, installs a newer version after verifying its signature, and restarts into it in the background once no Grumpo window is open. Settings has an Update automatically switch, on by default.
@@ -101,5 +103,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Shortening the retention period deletes older history as soon as the change is saved, and Delete history keeps today's usage only while limits are configured or the service cannot be reached.
 - Logs at `info` and above never contain domains or app names.
 
-[Unreleased]: https://github.com/brian-rey-development/grumpo/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/brian-rey-development/grumpo/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/brian-rey-development/grumpo/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/brian-rey-development/grumpo/releases/tag/v0.1.0
