@@ -59,5 +59,5 @@ export function connectedStatus({
 export const NOT_INSTALLED: FocusStatus = {
   kind: 'unavailable',
   reason: 'notInstalled',
-  message: 'No socket at /var/run/focusd.sock',
+  message: 'No socket at /var/run/grumpod.sock',
 };

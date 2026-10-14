@@ -15,6 +15,7 @@ use crate::platform::{Browser, Permission, PermissionProbe, PermissionState, Pla
 const OPEN: &str = "/usr/bin/open";
 const OPEN_TIMEOUT: Duration = Duration::from_secs(3);
 const TCCUTIL: &str = "/usr/bin/tccutil";
+const TCCUTIL_TIMEOUT: Duration = Duration::from_secs(3);
 const ACCESSIBILITY_SERVICE: &str = "Accessibility";
 const ACCESSIBILITY_PANE: &str =
     "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility";
@@ -37,12 +38,7 @@ impl PermissionProbe for MacPermissions {
 
     fn request(&self, permission: Permission) -> PermissionState {
         match permission {
-            Permission::Accessibility => {
-                if !accessibility::is_trusted() {
-                    forget_stale_accessibility_grant();
-                }
-                accessibility_state_after(accessibility::request_trust())
-            }
+            Permission::Accessibility => request_accessibility(),
             Permission::Automation(Browser::Firefox) => PermissionState::Unsupported,
             Permission::Automation(browser) => {
                 let status = apple_events::request_automation(browser.bundle_id());
@@ -72,20 +68,30 @@ impl PermissionProbe for MacPermissions {
     }
 }
 
-/// An ad hoc signed build gets a new code hash on every release, so macOS keeps the switch
-/// of an older build turned on in System Settings while refusing this one. Removing the
-/// entry lets the prompt that follows add one that matches this build.
+fn request_accessibility() -> PermissionState {
+    if !accessibility::is_trusted() {
+        forget_stale_accessibility_grant();
+    }
+    accessibility_state_after(accessibility::request_trust())
+}
+
+/// A differently signed build keeps the old switch on in System Settings while macOS refuses
+/// the new one, so the entry is removed to let the next prompt add a matching one.
 fn forget_stale_accessibility_grant() {
     let Some(bundle_id) = NSBundle::mainBundle().bundleIdentifier() else {
         return;
     };
     let mut command = Command::new(TCCUTIL);
-    command.args(["reset", ACCESSIBILITY_SERVICE, &bundle_id.to_string()]);
-    match run_bounded(&mut command, OPEN_TIMEOUT) {
+    command.args(accessibility_reset_args(&bundle_id.to_string()));
+    match run_bounded(&mut command, TCCUTIL_TIMEOUT) {
         Ok(output) if output.status.success() => {}
         Ok(output) => tracing::warn!(status = %output.status, "tccutil reset failed"),
         Err(error) => tracing::warn!(?error, "tccutil reset did not run"),
     }
+}
+
+fn accessibility_reset_args(bundle_id: &str) -> [&str; 3] {
+    ["reset", ACCESSIBILITY_SERVICE, bundle_id]
 }
 
 fn accessibility_state() -> PermissionState {

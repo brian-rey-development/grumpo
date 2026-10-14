@@ -37,7 +37,9 @@ on_disk_files() {
 check_casing() {
   local mismatched
   mismatched="$(LC_ALL=C comm -23 <(git ls-files | LC_ALL=C sort) <(on_disk_files | LC_ALL=C sort) |
-    while IFS= read -r path; do [[ -e "$path" ]] && printf '%s\n' "$path"; done)"
+    while IFS= read -r path; do
+      if [[ -e "$path" ]]; then printf '%s\n' "$path"; fi
+    done)"
   [[ -z "$mismatched" ]] && return
   echo "Git tracks these paths with a different casing than the files on disk:" >&2
   echo "$mismatched" >&2
@@ -52,7 +54,7 @@ check_casing
 
 gate "shellcheck"
 if command -v shellcheck >/dev/null 2>&1; then
-  shellcheck -x scripts/*.sh scripts/lib/*.sh
+  shellcheck -x scripts/*.sh scripts/lib/*.sh scripts/ci/*.sh site/src/installer/install.sh
 else
   echo "shellcheck is not installed, skipping (CI runs it)"
 fi

@@ -1,8 +1,8 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-pub const DEFAULT_SOCKET_PATH: &str = "/var/run/focusd.sock";
-pub const SOCKET_ENV: &str = "FOCUSD_SOCKET";
+pub const DEFAULT_SOCKET_PATH: &str = "/var/run/grumpod.sock";
+pub const SOCKET_ENV: &str = "GRUMPOD_SOCKET";
 
 /// Where the daemon listens, which `SOCKET_ENV` overrides when it is set and not empty.
 ///

@@ -19,13 +19,13 @@ export function GeneralSection({ settings }: { settings: Settings }) {
   const reset = useResetOnboarding();
   const [failed, setFailed] = useState<string | null>(null);
 
-  function setLaunchAtLogin(launchAtLogin: boolean): void {
+  function save(changes: Partial<Settings>, failure: string): void {
     setFailed(null);
     update.mutate(
-      { ...settings, launchAtLogin },
+      { ...settings, ...changes },
       {
-        onError: (failure) => {
-          setFailed(`${copy.failed} ${describeFailure(failure, commonCopy.tryAgainSoon)}`);
+        onError: (error) => {
+          setFailed(`${failure} ${describeFailure(error, commonCopy.tryAgainSoon)}`);
         },
       },
     );
@@ -48,7 +48,19 @@ export function GeneralSection({ settings }: { settings: Settings }) {
             label={copy.launchAtLogin}
             checked={settings.launchAtLogin}
             disabled={update.isPending}
-            onChange={setLaunchAtLogin}
+            onChange={(launchAtLogin) => {
+              save({ launchAtLogin }, copy.launchAtLoginFailed);
+            }}
+          />
+        </SectionRow>
+        <SectionRow label={copy.autoUpdate} detail={copy.autoUpdateDetail}>
+          <Toggle
+            label={copy.autoUpdate}
+            checked={settings.autoUpdate}
+            disabled={update.isPending}
+            onChange={(autoUpdate) => {
+              save({ autoUpdate }, copy.autoUpdateFailed);
+            }}
           />
         </SectionRow>
         <SectionRow label={copy.welcome} detail={copy.welcomeDetail}>

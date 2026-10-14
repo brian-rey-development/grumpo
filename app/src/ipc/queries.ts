@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery, type UseQueryResult } from '@tanstack/react
 
 import { invokeCommand } from '@/ipc/commands';
 import type { CommandFailure } from '@/ipc/errors';
+import type { BrowserAccess } from '@/ipc/generated/BrowserAccess';
 import type { ClockStyle } from '@/ipc/generated/ClockStyle';
 import type { DayReport } from '@/ipc/generated/DayReport';
 import type { FocusStatus } from '@/ipc/generated/FocusStatus';
@@ -14,9 +15,23 @@ import type { WeekReport } from '@/ipc/generated/WeekReport';
 import { queryKeys } from '@/ipc/queryKeys';
 import type { ClockOptions } from '@/lib/format';
 import { DAYS_PER_WEEK, HOURS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE } from '@/lib/time';
+
 const APP_ICON_STALE_MS = HOURS_PER_DAY * MS_PER_HOUR;
 const APP_ICON_GC_MS = DAYS_PER_WEEK * HOURS_PER_DAY * MS_PER_HOUR;
 const KNOWN_APPS_STALE_MS = MS_PER_MINUTE;
+const PENDING_PERMISSIONS_POLL_MS = 2000;
+
+/** A browser that is not on this Mac, or that Grumpo reads without asking, has nothing to allow. */
+export function hasAccessToAllow(entry: BrowserAccess): boolean {
+  return entry.installed && entry.permission !== 'unsupported';
+}
+
+export function hasPendingPermission(permissions: Permissions): boolean {
+  return (
+    permissions.accessibility !== 'granted' ||
+    permissions.browsers.some((entry) => hasAccessToAllow(entry) && entry.permission !== 'granted')
+  );
+}
 
 export function useDayReport(date: string): UseQueryResult<DayReport, CommandFailure> {
   return useQuery({
@@ -81,15 +96,22 @@ export function useClockStyle(): UseQueryResult<ClockStyle, CommandFailure> {
   });
 }
 
-/** How clock times are written, which follows the Mac's setting once it is known. */
 export function useClockOptions(): ClockOptions {
   return { clockStyle: useClockStyle().data };
 }
 
-export function usePermissions(): UseQueryResult<Permissions, CommandFailure> {
+/** `followPending` polls while something is not allowed yet, so a flipped switch shows up. */
+export function usePermissions({ followPending = false } = {}): UseQueryResult<
+  Permissions,
+  CommandFailure
+> {
   return useQuery({
     queryKey: queryKeys.permissions,
     queryFn: () => invokeCommand('get_permissions'),
+    refetchInterval: ({ state }) =>
+      followPending && state.data !== undefined && hasPendingPermission(state.data)
+        ? PENDING_PERMISSIONS_POLL_MS
+        : false,
   });
 }
 

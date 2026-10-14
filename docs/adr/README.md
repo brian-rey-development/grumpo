@@ -16,3 +16,5 @@ These records capture the decisions that shape Grumpo and the reasons behind the
 | [0010](0010-raising-a-limit-always-needs-an-unlock.md) | Raising or removing a daily limit always needs an unlock | Accepted | 2026-10-12 |
 | [0011](0011-app-installs-the-service-through-the-admin-prompt.md) | The app installs the service through the administrator prompt | Accepted | 2026-10-12 |
 | [0012](0012-grumpo-rebrand-and-block-screen.md) | The product becomes Grumpo and blocks get a screen, while identifiers keep their names | Accepted | 2026-10-12 |
+| [0013](0013-self-signed-releases-and-automatic-updates.md) | Releases carry a self-signed certificate and the app updates itself once a day | Accepted | 2026-10-13 |
+| [0014](0014-the-daemon-is-renamed-grumpod.md) | The daemon is renamed grumpod, and the installer migrates focusd | Accepted | 2026-10-13 |

@@ -13,7 +13,6 @@
   --pose-height: var(--size-mascot-badge);
 }
 
-/* The header is its own row, so a wide list below cannot stretch the mascot and the heading apart. */
 .header {
   display: flex;
   align-items: center;
@@ -22,10 +21,6 @@
 }
 
 .header > .heading {
-  text-align: left;
-}
-
-.heading {
   text-align: left;
 }
 

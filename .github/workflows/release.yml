@@ -1,8 +1,10 @@
 name: Release
 
+# A manual run builds, signs and packs without releasing, to try the signing setup before a tag.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -32,9 +34,9 @@ jobs:
           cache: pnpm
           cache-dependency-path: app/pnpm-lock.yaml
 
-      # Tauri reads the app version from the Cargo workspace and the UI reads it from
-      # app/package.json, so the tag must match both.
+      # Tauri reads the version from the Cargo workspace and the UI from app/package.json.
       - name: Check that the tag matches both version sources
+        if: github.event_name == 'push'
         run: |
           npm_version="$(node -p "require('./app/package.json').version")"
           cargo_version="$(sed -n '/^\[workspace.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)"
@@ -53,15 +55,34 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
+      - name: Import the release signing certificate
+        env:
+          SIGNING_CERTIFICATE_P12: ${{ secrets.SIGNING_CERTIFICATE_P12 }}
+          SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.SIGNING_CERTIFICATE_PASSWORD }}
+        run: scripts/ci/import-signing-certificate.sh
+
       - name: Build the universal app
         run: scripts/build-release.sh --universal
+
+      - name: Check that the signature survives updates
+        run: |
+          source scripts/lib/common.sh
+          source scripts/lib/sign.sh
+          assert_stable_requirement dist/release/Grumpo.app
 
       - name: Pack Grumpo.dmg
         run: scripts/package-dmg.sh
 
-      # A draft, so a person checks the notes and the download before the site links to it.
-      # Publishing the draft triggers the Site workflow, which redeploys the landing page.
+      - name: Pack and sign the update
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: scripts/package-update.sh
+
+      # A draft keeps the site and installed copies from seeing the release until someone checks it.
+      # Publishing it triggers the Site workflow.
       - name: Create a draft release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -70,4 +91,5 @@ jobs:
             --verify-tag \
             --title "Grumpo ${GITHUB_REF_NAME#v}" \
             --generate-notes \
-            dist/release/Grumpo.dmg dist/release/Grumpo.dmg.sha256
+            dist/release/Grumpo.dmg dist/release/Grumpo.dmg.sha256 \
+            dist/release/Grumpo.app.tar.gz dist/release/Grumpo.app.tar.gz.sig dist/release/latest.json

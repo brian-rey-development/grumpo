@@ -9,10 +9,9 @@ import { settingsCopy } from '@/features/settings/copy';
 import { FirefoxRow } from '@/features/settings/FirefoxRow';
 import { PermissionRow } from '@/features/settings/PermissionRow';
 import { useRefreshOnFocus } from '@/features/settings/useRefreshOnFocus';
-import type { BrowserAccess } from '@/ipc/generated/BrowserAccess';
 import type { PermissionKind } from '@/ipc/generated/PermissionKind';
 import type { Permissions } from '@/ipc/generated/Permissions';
-import { usePermissions } from '@/ipc/queries';
+import { hasAccessToAllow, usePermissions } from '@/ipc/queries';
 
 const copy = settingsCopy.permissions;
 
@@ -21,11 +20,6 @@ interface Row {
   name: string;
   kind: PermissionKind;
   status: Permissions['accessibility'];
-}
-
-/** A browser that is not on this Mac, or that Grumpo reads without asking, has nothing to allow. */
-function hasAccessToAllow(entry: BrowserAccess): boolean {
-  return entry.installed && entry.permission !== 'unsupported';
 }
 
 function rowsOf(permissions: Permissions): Row[] {
@@ -64,12 +58,11 @@ function Placeholder({ query }: { query: ReturnType<typeof usePermissions> }) {
 }
 
 interface PermissionsSectionProps {
-  /** `bare` leaves out the title and description, for a screen that already introduces the list. */
   variant?: 'section' | 'bare';
 }
 
 export function PermissionsSection({ variant = 'section' }: PermissionsSectionProps) {
-  const query = usePermissions();
+  const query = usePermissions({ followPending: true });
   const { refetch } = query;
   const refresh = useCallback(() => {
     void refetch();

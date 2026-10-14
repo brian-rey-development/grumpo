@@ -78,6 +78,10 @@
     interpolate-size: allow-keywords;
   }
 
+  html:has(dialog:modal) {
+    overflow: hidden;
+  }
+
   body {
     @apply min-h-dvh text-[1.0625rem] leading-relaxed;
   }

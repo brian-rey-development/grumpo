@@ -11,6 +11,7 @@ fn wanted(retention_days: u16, launch_at_login: bool) -> Settings {
     Settings {
         retention_days,
         launch_at_login,
+        auto_update: true,
     }
 }
 
@@ -34,9 +35,10 @@ fn age_sessions(store: &Store) {
 }
 
 #[test]
-fn defaults_are_ninety_days_and_no_launch() {
+fn defaults_are_ninety_days_no_launch_and_updates_on() {
     let settings = read(&store(), &FakeLaunch::default()).unwrap();
     assert_eq!(settings, wanted(90, false));
+    assert!(settings.auto_update);
 }
 
 #[test]
@@ -51,6 +53,20 @@ fn updates_round_trip() {
     let applied = apply_quietly(&store, &launch, wanted(120, false)).unwrap();
     assert_eq!(applied, wanted(120, false));
     assert!(!launch.is_enabled().unwrap());
+}
+
+#[test]
+fn automatic_updates_are_on_by_default_and_can_be_turned_off() {
+    let store = store();
+    let launch = FakeLaunch::default();
+    let off = Settings {
+        auto_update: false,
+        ..wanted(90, false)
+    };
+
+    assert!(read(&store, &launch).unwrap().auto_update);
+    assert_eq!(apply_quietly(&store, &launch, off).unwrap(), off);
+    assert!(!read(&store, &launch).unwrap().auto_update);
 }
 
 #[test]

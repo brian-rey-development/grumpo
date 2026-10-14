@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>io.github.brian-rey-development.focusd</string>
+  <string>io.github.brian-rey-development.grumpod</string>
   <key>ProgramArguments</key>
   <array>
-    <string>/Library/PrivilegedHelperTools/focusd</string>
+    <string>/Library/PrivilegedHelperTools/grumpod</string>
     <string>run</string>
     <string>--owner-uid</string>
     <string>__OWNER_UID__</string>
@@ -21,12 +21,12 @@
   <integer>5</integer>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>FOCUSD_LOG_FILE</key>
-    <string>/Library/Logs/Focus/focusd.log</string>
+    <key>GRUMPOD_LOG_FILE</key>
+    <string>/Library/Logs/Grumpo/grumpod.log</string>
   </dict>
   <key>StandardOutPath</key>
-  <string>/Library/Logs/Focus/focusd.log</string>
+  <string>/Library/Logs/Grumpo/grumpod.log</string>
   <key>StandardErrorPath</key>
-  <string>/Library/Logs/Focus/focusd.log</string>
+  <string>/Library/Logs/Grumpo/grumpod.log</string>
 </dict>
 </plist>

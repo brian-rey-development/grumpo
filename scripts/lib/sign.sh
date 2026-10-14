@@ -1,10 +1,13 @@
 # shellcheck shell=bash disable=SC2034
 # Code signing for Grumpo.app. Source this file, do not run it.
-# FOCUS_SIGNING_IDENTITY names a keychain identity, and without it Grumpo.app and focusd are signed ad hoc ("-").
+# FOCUS_SIGNING_IDENTITY names a keychain identity, and without it everything is signed ad hoc.
 
+# LibreSSL writes a PKCS#12 file that security import reads, which the OpenSSL 3 defaults do not.
+readonly OPENSSL="/usr/bin/openssl"
 readonly AD_HOC_IDENTITY="-"
+readonly RELEASE_IDENTITY="Grumpo Release Signing"
 readonly ENTITLEMENT_APPLE_EVENTS="com.apple.security.automation.apple-events"
-readonly DAEMON_IDENTIFIER="io.github.brian-rey-development.focusd"
+readonly DAEMON_IDENTIFIER="io.github.brian-rey-development.grumpod"
 readonly SHA1_HEX_LENGTH=40
 
 signing_identity() {
@@ -62,7 +65,7 @@ verify_signature() {
   local app="$1" app_dir="$2" expected details
   step "Verifying the code signature of $(basename "$app")"
   codesign --verify --deep --strict --verbose=2 "$app" || fail "codesign verification failed for $app"
-  details="$(codesign -dv --entitlements - "$app" 2>&1)"
+  details="$(codesign -dvv --entitlements - "$app" 2>&1)"
   printf '%s\n' "$details"
   expected="$(expected_bundle_identifier "$app_dir")"
   grep -qx "Identifier=$expected" <<<"$details" ||
@@ -70,6 +73,17 @@ verify_signature() {
   assert_signer "$details"
   grep -q "$ENTITLEMENT_APPLE_EVENTS" <<<"$details" ||
     fail "the app is missing the $ENTITLEMENT_APPLE_EVENTS entitlement, browser automation would be denied"
+}
+
+# macOS keeps permission grants across updates only when the designated requirement names the
+# certificate, and an ad hoc signature gives a cdhash requirement that changes with every build.
+assert_stable_requirement() {
+  local app="$1" requirement
+  requirement="$(codesign -d -r - "$app" 2>&1)"
+  if grep -q 'cdhash' <<<"$requirement" || ! grep -q 'certificate' <<<"$requirement"; then
+    printf '%s\n' "$requirement" >&2
+    fail "$app has no certificate based requirement, permission grants would not survive updates"
+  fi
 }
 
 # The hardened runtime is on, and the daemon needs no entitlement under it.
@@ -84,7 +98,7 @@ verify_daemon_signature() {
   local binary="$1" details
   step "Verifying the code signature of $(basename "$binary")"
   codesign --verify --strict --verbose=2 "$binary" || fail "codesign verification failed for $binary"
-  details="$(codesign -dv "$binary" 2>&1)"
+  details="$(codesign -dvv "$binary" 2>&1)"
   printf '%s\n' "$details"
   grep -qx "Identifier=$DAEMON_IDENTIFIER" <<<"$details" ||
     fail "the code signature identifier is not $DAEMON_IDENTIFIER"

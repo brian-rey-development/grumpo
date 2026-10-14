@@ -34,7 +34,6 @@ function Reasons({ explanation }: { explanation: Details }) {
   );
 }
 
-/** The reasons behind a permission or the service, tucked away so the row stays easy to scan. */
 export function WhyDisclosure({ explanation }: { explanation: Details }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();

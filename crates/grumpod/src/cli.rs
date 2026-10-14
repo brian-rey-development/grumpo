@@ -59,7 +59,7 @@ fn daemon_must_be_stopped(error: &LockError) -> String {
 
 fn ping(paths: &Paths) -> Result<(), CliError> {
     commands::ping(&paths.socket)?;
-    println!("focusd is answering on {}", paths.socket.display());
+    println!("grumpod is answering on {}", paths.socket.display());
     Ok(())
 }
 

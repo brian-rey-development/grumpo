@@ -139,6 +139,7 @@ fn daemon_kind(error: &DaemonError) -> &'static str {
         DaemonError::NotInstalled => "not_installed",
         DaemonError::NotResponding(_) => "not_responding",
         DaemonError::VersionMismatch { .. } => "version_mismatch",
+        DaemonError::Renamed => "renamed",
         DaemonError::OtherUser => "other_user",
         DaemonError::Rejected(_) => "rejected",
         DaemonError::Protocol(_) => "protocol",

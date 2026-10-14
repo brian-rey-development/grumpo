@@ -101,6 +101,18 @@ fn migrates_a_legacy_block_into_the_current_one() {
 }
 
 #[test]
+fn replaces_the_block_written_under_the_daemons_earlier_name() {
+    let earlier = format!(
+        "{BASE}# >>> focus: managed block, do not edit >>>\n0.0.0.0 old.com\n# <<< focus: managed block <<<\n10.0.0.1 intranet\n"
+    );
+    let rendered = render(&earlier, &sites(&["new.com"]));
+    assert_eq!(
+        rendered,
+        format!("{BASE}10.0.0.1 intranet\n{}", block_for(&["new.com"]))
+    );
+}
+
+#[test]
 fn removes_every_block_when_several_exist() {
     let doubled = format!(
         "{MARKER_START}\n0.0.0.0 a.com\n{MARKER_END}\n10.0.0.1 keep\n# FOCUS-HOSTS START\n0.0.0.0 b.com\n# FOCUS-HOSTS END\n{MARKER_START}\n0.0.0.0 c.com\n{MARKER_END}\n"
@@ -254,7 +266,7 @@ fn aliases_longer_than_a_hostname_are_left_out() {
 #[test]
 fn a_start_marker_is_not_closed_by_an_end_marker_of_the_other_kind() {
     let existing =
-        "127.0.0.1 localhost\n# FOCUS-HOSTS START\n10.0.0.5 nas\n# <<< focus: managed block <<<\n";
+        "127.0.0.1 localhost\n# FOCUS-HOSTS START\n10.0.0.5 nas\n# <<< grumpo: managed block <<<\n";
     assert_eq!(
         render(existing, &BTreeSet::new()),
         "127.0.0.1 localhost\n10.0.0.5 nas\n"
@@ -305,7 +317,7 @@ fn a_glued_start_is_replaced_by_the_new_block() {
 #[test]
 fn rendering_is_idempotent_for_the_marker_edge_cases() {
     let inputs = [
-        "127.0.0.1 localhost\n# FOCUS-HOSTS START\n10.0.0.5 nas\n# <<< focus: managed block <<<\n",
+        "127.0.0.1 localhost\n# FOCUS-HOSTS START\n10.0.0.5 nas\n# <<< grumpo: managed block <<<\n",
         "10.0.0.5 nas# FOCUS-HOSTS START\n0.0.0.0 old.com\n# FOCUS-HOSTS END\n",
         "10.0.0.5 nas# FOCUS-HOSTS START\n",
     ];

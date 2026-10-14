@@ -31,10 +31,10 @@ const CONTENTS_DIR: &str = "Contents";
 const EXECUTABLE_DIR: &str = "MacOS";
 const INSTALLER_DIR: &str = "Resources/installer";
 const INSTALLER_SCRIPT: &str = "Resources/installer/scripts/install.sh";
-const DAEMON_BINARY: &str = "MacOS/focusd";
+const DAEMON_BINARY: &str = "MacOS/grumpod";
 /// Where the installer takes its lock, and the file in it that names the process holding it.
 /// Root owns both, and anyone can read them.
-const LOCK_PID_FILE: &str = "/var/run/focusd-install.lock/pid";
+const LOCK_PID_FILE: &str = "/var/run/grumpod-install.lock/pid";
 /// The password prompt can wait for the person, and the installer waits for the daemon to
 /// answer before it ends.
 const INSTALL_TIMEOUT: Duration = Duration::from_secs(600);
@@ -52,9 +52,9 @@ work=$(/usr/bin/mktemp -d /private/var/tmp/grumpo-install.XXXXXX)
 trap '/bin/rm -rf "$work"' EXIT
 /bin/chmod 700 "$work"
 /bin/cp -RL "$1" "$work/installer"
-/bin/cp -L "$2" "$work/focusd"
-/usr/bin/codesign --verify --strict "$work/focusd"
-/bin/bash --noprofile --norc "$work/installer/scripts/install.sh" --binary "$work/focusd" --owner "$3"
+/bin/cp -L "$2" "$work/grumpod"
+/usr/bin/codesign --verify --strict "$work/grumpod"
+/bin/bash --noprofile --norc "$work/installer/scripts/install.sh" --binary "$work/grumpod" --owner "$3"
 "#;
 
 /// Static on purpose, so no path or name can reach the script source. The values arrive as

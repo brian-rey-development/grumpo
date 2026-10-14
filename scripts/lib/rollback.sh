@@ -19,7 +19,7 @@ restore_state_file() {
   fi
 }
 
-unload_new_focusd() {
+unload_new_grumpod() {
   launchctl bootout "system/$LABEL" >/dev/null 2>&1
   poll is_unloaded "$LABEL" || warn "$LABEL is still loaded after $WAIT_SECONDS seconds, the rollback continues anyway"
 }
@@ -31,9 +31,9 @@ restore_previous_files() {
 
 strip_new_hosts_block() {
   if "$BINARY_DEST" strip-hosts >/dev/null 2>&1; then
-    note "removed the hosts block written by the new focusd"
+    note "removed the hosts block written by the new grumpod"
   else
-    warn "could not remove the hosts block written by the new focusd, run: sudo $(printf '%q' "$BINARY_DEST") strip-hosts"
+    warn "could not remove the hosts block written by the new grumpod, run: sudo $(printf '%q' "$BINARY_DEST") strip-hosts"
   fi
 }
 
@@ -42,7 +42,7 @@ remove_partial_install() {
     strip_new_hosts_block
   fi
   rm -f "$BINARY_DEST" "$PLIST_DEST"
-  note "there was no previous focusd, so the partly installed files were removed"
+  note "there was no previous grumpod, so the partly installed files were removed"
 }
 
 restart_with_hint() {
@@ -54,12 +54,12 @@ restart_with_hint() {
   fi
 }
 
-restart_previous_focusd() {
+restart_previous_grumpod() {
   if [[ $PREVIOUS_RAN -eq 0 ]]; then
-    note "the previous focusd was not running before the install, so it was not started"
+    note "the previous grumpod was not running before the install, so it was not started"
     return 0
   fi
-  restart_with_hint "$LABEL" "$PLIST_DEST" "the previous focusd"
+  restart_with_hint "$LABEL" "$PLIST_DEST" "the previous grumpod"
 }
 
 rollback() {
@@ -67,14 +67,15 @@ rollback() {
     note "nothing had been changed yet"
     return 0
   fi
-  unload_new_focusd
+  unload_new_grumpod
   restore_state_file
   if [[ $PREVIOUS_BINARY_SAVED -eq 1 || $PREVIOUS_PLIST_SAVED -eq 1 ]]; then
     restore_previous_files
-    restart_previous_focusd
+    restart_previous_grumpod
   else
     remove_partial_install
   fi
+  restart_focusd
   restart_legacy
 }
 

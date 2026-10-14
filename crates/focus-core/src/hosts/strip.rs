@@ -2,12 +2,16 @@ use super::{MARKER_END, MARKER_START};
 
 const CURRENT_START: &[u8] = MARKER_START.as_bytes();
 const CURRENT_END: &[u8] = MARKER_END.as_bytes();
+const FOCUSD_START: &[u8] = b"# >>> focus: managed block, do not edit >>>";
+const FOCUSD_END: &[u8] = b"# <<< focus: managed block <<<";
 const LEGACY_START: &[u8] = b"# FOCUS-HOSTS START";
 const LEGACY_END: &[u8] = b"# FOCUS-HOSTS END";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Kind {
     Current,
+    /// Written by the daemon before it was renamed from focusd to grumpod.
+    Focusd,
     Legacy,
 }
 
@@ -36,8 +40,10 @@ impl Line<'_> {
 fn classify(line: &[u8]) -> Line<'_> {
     match line.trim_ascii() {
         CURRENT_START => Line::Start(Kind::Current),
+        FOCUSD_START => Line::Start(Kind::Focusd),
         LEGACY_START => Line::Start(Kind::Legacy),
         CURRENT_END => Line::End(Kind::Current),
+        FOCUSD_END => Line::End(Kind::Focusd),
         LEGACY_END => Line::End(Kind::Legacy),
         _ => line
             .trim_ascii_end()

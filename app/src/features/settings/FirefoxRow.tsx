@@ -5,7 +5,6 @@ import type { PermissionStatus } from '@/ipc/generated/PermissionStatus';
 
 const copy = settingsCopy.permissions.firefox;
 
-/** Firefox has no Automation access of its own, so its row only mirrors Accessibility. */
 export function FirefoxRow({ accessibility }: { accessibility: PermissionStatus }) {
   const covered = accessibility === 'granted';
 

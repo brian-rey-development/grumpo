@@ -68,7 +68,11 @@ export const settingsCopy = {
     title: 'General',
     launchAtLogin: 'Launch at login',
     launchAtLoginDetail: 'Open Grumpo when you log in, so blocking and tracking start right away.',
-    failed: "Launch at login couldn't be changed.",
+    launchAtLoginFailed: "Launch at login couldn't be changed.",
+    autoUpdate: 'Update automatically',
+    autoUpdateDetail:
+      'Once a day, Grumpo asks GitHub for a newer version and installs it. Nothing about you is sent.',
+    autoUpdateFailed: "Automatic updates couldn't be changed.",
     welcome: 'Welcome',
     welcomeDetail: 'Walk through what Grumpo does and why he needs access, one more time.',
     showWelcome: 'Show welcome again',

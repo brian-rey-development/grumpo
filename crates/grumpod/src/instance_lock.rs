@@ -5,12 +5,12 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 
-const LOCK_FILE: &str = "focusd.lock";
+const LOCK_FILE: &str = "grumpod.lock";
 const LOCK_MODE: u32 = 0o600;
 
 #[derive(Debug, Error)]
 pub enum LockError {
-    #[error("focusd is already running, it holds the lock {}", .0.display())]
+    #[error("grumpod is already running, it holds the lock {}", .0.display())]
     Held(PathBuf),
     #[error("could not take the instance lock {}: {source}", path.display())]
     Io { path: PathBuf, source: io::Error },

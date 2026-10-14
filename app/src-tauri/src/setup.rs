@@ -9,6 +9,7 @@ use std::time::Duration;
 use tauri::{App, AppHandle, Manager};
 
 use crate::block_screen::{BlockScreenHub, TauriBlockSurface};
+use crate::concurrency::StoppableThread;
 use crate::daemon_client::DaemonClient;
 use crate::enforcement::{EnforcementDeps, EngineSink};
 use crate::events::AppEvents;
@@ -24,6 +25,7 @@ use crate::time::{Clock, ClockFormatter, SystemCalendar, SystemClock};
 use crate::tracking::observer::Observer;
 use crate::tracking::sampler::Sampler;
 use crate::tray::TrayHandle;
+use crate::updates::{self, UpdateDeps};
 use crate::window;
 use database::open_database;
 
@@ -219,5 +221,18 @@ fn start_workers(parts: &Parts, observer: Observer) -> Result<Workers, Box<dyn E
         poller,
         Arc::clone(&parts.status),
         activity,
+        start_updates(parts),
     ))
+}
+
+/// A thread that cannot start costs the updates, not the app.
+fn start_updates(parts: &Parts) -> Option<StoppableThread> {
+    updates::start(UpdateDeps {
+        app: parts.handle.clone(),
+        store: Arc::clone(&parts.store),
+        notifier: Arc::clone(&parts.notifier),
+    })
+    .inspect_err(|error| tracing::warn!(%error, "automatic updates are unavailable"))
+    .ok()
+    .flatten()
 }

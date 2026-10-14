@@ -19,6 +19,7 @@ pub(crate) mod telemetry;
 pub(crate) mod time;
 pub(crate) mod tracking;
 pub(crate) mod tray;
+pub(crate) mod updates;
 pub(crate) mod window;
 
 use std::process::ExitCode;
@@ -49,6 +50,7 @@ fn build() -> tauri::Result<tauri::App> {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(login_item_plugin())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(setup::setup)
         .on_window_event(window::hide_on_close)
         .invoke_handler(command_handler())

@@ -1,0 +1,77 @@
+---
+import CopyCommand from '@/components/ui/CopyCommand.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { installHelp, terminalInstall } from '@/config/content';
+import { asset, installCommand } from '@/config/site';
+
+const { mascot } = installHelp;
+
+const layout =
+  'm-auto max-h-[calc(100dvh-2rem)] w-[min(100%-2rem,34rem)] overflow-y-auto overscroll-contain';
+const surface = 'rounded-sticker border-3 border-ink bg-raised text-ink shadow-hard-lg';
+const motion = [
+  'translate-y-4 opacity-0 open:translate-y-0 open:opacity-100',
+  'starting:open:translate-y-4 starting:open:opacity-0',
+  'transition-[opacity,translate,overlay,display] transition-discrete duration-300 ease-spring',
+];
+const backdrop = [
+  'backdrop:bg-ink/0 open:backdrop:bg-ink/50 starting:open:backdrop:bg-ink/0',
+  'backdrop:transition-[background-color,overlay,display] backdrop:transition-discrete backdrop:duration-300',
+];
+---
+
+<dialog
+  data-install-help
+  aria-labelledby="install-help-title"
+  class:list={[layout, surface, motion, backdrop]}
+>
+  <div class="relative p-6 sm:p-8">
+    <form method="dialog" class="absolute top-4 right-4">
+      <button
+        aria-label="Close"
+        class="flex size-10 items-center justify-center rounded-full border-3 border-ink bg-raised transition-colors hover:bg-orange"
+      >
+        <Icon name="close" class="size-5" />
+      </button>
+    </form>
+
+    <div class="flex items-center gap-3 pr-10 sm:gap-4 sm:pr-12">
+      <img
+        src={asset(mascot.src)}
+        alt=""
+        width={mascot.width}
+        height={mascot.height}
+        loading="lazy"
+        class="w-14 shrink-0 sm:w-20"
+      />
+      <h2 id="install-help-title" class="text-3xl tracking-tight sm:text-4xl">
+        {installHelp.title}
+      </h2>
+    </div>
+
+    <ol class="mt-6 space-y-4">
+      {installHelp.steps.map((step, index) => (
+        <li class="flex gap-4">
+          <span class="flex size-9 shrink-0 items-center justify-center rounded-full border-3 border-ink bg-orange font-display font-bold">
+            {index + 1}
+          </span>
+          <p class="pt-1">{step}</p>
+        </li>
+      ))}
+    </ol>
+
+    <p class="mt-6 font-semibold">{installHelp.once}</p>
+
+    <div class="mt-7 border-t-3 border-ink pt-6">
+      <h3 class="text-xl tracking-tight">{terminalInstall.title}</h3>
+      <p class="mt-1 text-ink-soft">{terminalInstall.body}</p>
+      <CopyCommand command={installCommand(Astro.site)} class="mt-4" />
+    </div>
+  </div>
+</dialog>
+
+<script>
+  import { mountInstallHelp } from '@/scripts/install-help';
+
+  mountInstallHelp();
+</script>

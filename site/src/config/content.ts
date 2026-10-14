@@ -1,5 +1,7 @@
 import { site } from '@/config/site';
 
+const ONLY_ONCE = 'You only do this once. Grumpo updates itself after that.';
+
 export interface TourStep {
   id: string;
   title: string;
@@ -86,6 +88,16 @@ export const questions: readonly Question[] = [
     answer: 'You can. Sites stay blocked anyway. Grumpo stops impulses, not admins.',
     link: { label: 'Every known way around it', href: site.docs.threatModel },
   },
+  {
+    question: 'Why does macOS warn me when I open it?',
+    answer:
+      "Grumpo isn't notarized by Apple yet. Choose Open Anyway in System Settings > Privacy & Security. You only do this once.",
+  },
+  {
+    question: 'Does it connect to the internet?',
+    answer:
+      'Only to check GitHub for updates once a day, and to download one when there is one. It sends nothing about you. You can turn it off in Settings.',
+  },
   { question: 'Does it work with Firefox?', answer: "Sites are blocked. Tabs can't be closed." },
   {
     question: 'What about other accounts on my Mac?',
@@ -105,10 +117,10 @@ export interface InstallStep {
 }
 
 export const installSteps: readonly InstallStep[] = [
-  { title: 'Drag to Applications', body: 'Open the download and drag Grumpo in.' },
+  { title: 'Drag to Applications', body: 'Open Grumpo.dmg and drag Grumpo in.' },
   {
     title: 'Open it',
-    body: 'If macOS blocks it, go to System Settings, Privacy & Security, and click Open Anyway.',
+    body: `If macOS warns you, choose Open Anyway in System Settings > Privacy & Security. ${ONLY_ONCE}`,
   },
   {
     title: 'Install the service',
@@ -116,3 +128,22 @@ export const installSteps: readonly InstallStep[] = [
   },
   { title: 'Allow browser access', body: 'So Grumpo can see and close blocked tabs.' },
 ];
+
+export const installHelp = {
+  title: 'Almost there',
+  mascot: { src: 'img/sticker-approve.webp', width: 319, height: 325 },
+  steps: [
+    'Open Grumpo.dmg and drag Grumpo to Applications.',
+    "Open Grumpo. When macOS says it can't check it, choose Done.",
+    'Go to System Settings > Privacy & Security. Scroll down, choose Open Anyway and confirm.',
+  ],
+  once: ONLY_ONCE,
+} as const;
+
+export const terminalInstall = {
+  title: 'Install from Terminal',
+  body: 'Installs the latest release and skips the macOS warning.',
+} as const;
+
+export const networkNote =
+  'The only network requests are a daily check for updates on GitHub and downloading an update when there is one. It sends nothing about you, and you can turn it off in Settings.';

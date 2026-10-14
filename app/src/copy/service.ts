@@ -1,7 +1,7 @@
 import type { DaemonUnavailableReason } from '@/ipc/generated/DaemonUnavailableReason';
 
 export const INSTALL_COMMAND =
-  'scripts/build-release.sh && sudo scripts/install.sh --binary dist/release/focusd';
+  'scripts/build-release.sh && sudo scripts/install.sh --binary dist/release/grumpod';
 
 export const serviceCopy = {
   reasons: {

@@ -4,8 +4,8 @@ use std::collections::BTreeSet;
 
 use crate::Domain;
 
-pub(crate) const MARKER_START: &str = "# >>> focus: managed block, do not edit >>>";
-pub(crate) const MARKER_END: &str = "# <<< focus: managed block <<<";
+pub(crate) const MARKER_START: &str = "# >>> grumpo: managed block, do not edit >>>";
+pub(crate) const MARKER_END: &str = "# <<< grumpo: managed block <<<";
 const IPV4_SINK: &str = "0.0.0.0";
 const IPV6_SINK: &str = "::";
 const MAX_HOSTNAME_LEN: usize = 253;

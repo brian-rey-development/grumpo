@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use thiserror::Error;
 
 pub const USAGE: &str = "usage:
-  focusd run --owner-uid <uid>        serve the Grumpo socket until stopped
-  focusd import-legacy <script-path>  create the state from the old focus-hosts script
-  focusd strip-hosts                  remove the managed block from the hosts file";
+  grumpod run --owner-uid <uid>        serve the Grumpo socket until stopped
+  grumpod import-legacy <script-path>  create the state from the old focus-hosts script
+  grumpod strip-hosts                  remove the managed block from the hosts file";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {

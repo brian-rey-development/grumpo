@@ -2,7 +2,10 @@ use super::*;
 
 #[test]
 fn defaults_to_the_installed_socket() {
-    assert_eq!(socket_path(|_| None), PathBuf::from("/var/run/focusd.sock"));
+    assert_eq!(
+        socket_path(|_| None),
+        PathBuf::from("/var/run/grumpod.sock")
+    );
 }
 
 #[test]

@@ -13,7 +13,7 @@ fn hosts_with(content: &str) -> (tempfile::TempDir, HostsFile, std::path::PathBu
 #[test]
 fn removes_current_and_legacy_blocks_and_keeps_the_rest() {
     let content = "127.0.0.1 localhost\n\
-        # >>> focus: managed block, do not edit >>>\n0.0.0.0 a.com\n# <<< focus: managed block <<<\n\
+        # >>> grumpo: managed block, do not edit >>>\n0.0.0.0 a.com\n# <<< grumpo: managed block <<<\n\
         # FOCUS-HOSTS START\n0.0.0.0 b.com\n# FOCUS-HOSTS END\n";
     let (_dir, hosts, path) = hosts_with(content);
     assert!(strip_hosts(&hosts).unwrap().changed);
@@ -38,7 +38,7 @@ fn a_missing_file_is_not_an_error() {
 fn a_non_utf8_hosts_file_is_stripped_and_its_other_bytes_survive() {
     let mut content = b"127.0.0.1 localhost\n# caf\xE9\n".to_vec();
     content.extend_from_slice(
-        b"# >>> focus: managed block, do not edit >>>\n0.0.0.0 a.com\n# <<< focus: managed block <<<\n",
+        b"# >>> grumpo: managed block, do not edit >>>\n0.0.0.0 a.com\n# <<< grumpo: managed block <<<\n",
     );
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("hosts");

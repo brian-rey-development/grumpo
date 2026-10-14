@@ -37,7 +37,7 @@ pub enum RunError {
 pub fn run(paths: &Paths, owner_uid: u32) -> Result<Infallible, RunError> {
     info!(
         version = env!("CARGO_PKG_VERSION"),
-        owner_uid, "focusd starting"
+        owner_uid, "grumpod starting"
     );
     let log = paths.log_file.clone().and_then(attach_log);
     let (store, _instance) = ensure_state_dir(&paths.state_dir)?;

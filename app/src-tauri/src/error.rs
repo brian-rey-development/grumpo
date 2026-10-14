@@ -97,7 +97,9 @@ fn daemon_code(error: &DaemonError) -> CommandErrorCode {
         DaemonError::NotInstalled | DaemonError::NotResponding(_) | DaemonError::OtherUser => {
             CommandErrorCode::DaemonUnavailable
         }
-        DaemonError::VersionMismatch { .. } => CommandErrorCode::VersionMismatch,
+        DaemonError::VersionMismatch { .. } | DaemonError::Renamed => {
+            CommandErrorCode::VersionMismatch
+        }
         DaemonError::Rejected(rejection) => rejected_code(rejection.code),
         DaemonError::Protocol(_) => CommandErrorCode::Internal,
     }

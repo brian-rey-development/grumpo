@@ -14,10 +14,10 @@ fn defaults_follow_the_installed_layout() {
     let paths = Paths::from_lookup(lookup(&[]));
     assert_eq!(
         paths.state_dir,
-        PathBuf::from("/Library/Application Support/Focus")
+        PathBuf::from("/Library/Application Support/Grumpo")
     );
     assert_eq!(paths.hosts_file, PathBuf::from("/etc/hosts"));
-    assert_eq!(paths.socket, PathBuf::from("/var/run/focusd.sock"));
+    assert_eq!(paths.socket, PathBuf::from("/var/run/grumpod.sock"));
     assert_eq!(paths.log_file, None);
     assert!(paths.flushes_dns());
 }
@@ -25,10 +25,10 @@ fn defaults_follow_the_installed_layout() {
 #[test]
 fn each_variable_overrides_its_own_path() {
     let paths = Paths::from_lookup(lookup(&[
-        ("FOCUSD_STATE_DIR", "/tmp/s"),
-        ("FOCUSD_HOSTS_FILE", "/tmp/h"),
-        ("FOCUSD_SOCKET", "/tmp/k"),
-        ("FOCUSD_LOG_FILE", "/tmp/l"),
+        ("GRUMPOD_STATE_DIR", "/tmp/s"),
+        ("GRUMPOD_HOSTS_FILE", "/tmp/h"),
+        ("GRUMPOD_SOCKET", "/tmp/k"),
+        ("GRUMPOD_LOG_FILE", "/tmp/l"),
     ]));
     assert_eq!(paths.state_dir, PathBuf::from("/tmp/s"));
     assert_eq!(paths.hosts_file, PathBuf::from("/tmp/h"));
@@ -39,6 +39,6 @@ fn each_variable_overrides_its_own_path() {
 
 #[test]
 fn empty_values_fall_back_to_defaults() {
-    let paths = Paths::from_lookup(lookup(&[("FOCUSD_SOCKET", "")]));
-    assert_eq!(paths.socket, PathBuf::from("/var/run/focusd.sock"));
+    let paths = Paths::from_lookup(lookup(&[("GRUMPOD_SOCKET", "")]));
+    assert_eq!(paths.socket, PathBuf::from("/var/run/grumpod.sock"));
 }

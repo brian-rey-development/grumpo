@@ -7,9 +7,6 @@ use std::time::Duration;
 type StopHook = Box<dyn FnOnce() + Send + Sync>;
 
 /// A worker thread that is asked to stop and then joined, when told to or when dropped.
-///
-/// Starting one can fail, and every caller treats that the same way: it hands the error up so
-/// the app does not run with tracking or enforcement silently missing.
 pub struct StoppableThread {
     name: &'static str,
     stop: Option<StopHook>,
@@ -64,15 +61,25 @@ impl StoppableThread {
         Self::spawn(name, move || drop(sender), move || body(&signal))
     }
 
+    /// Asks the thread to stop and detaches it instead of joining.
+    pub fn stop_without_waiting(mut self) {
+        self.request_stop();
+        self.join = None;
+    }
+
     /// Asks the thread to stop and waits for it. Safe to call twice.
     pub fn stop(&mut self) {
-        if let Some(stop) = self.stop.take() {
-            stop();
-        }
+        self.request_stop();
         if let Some(join) = self.join.take() {
             if join.join().is_err() {
                 tracing::error!(thread = self.name, "a worker thread panicked");
             }
+        }
+    }
+
+    fn request_stop(&mut self) {
+        if let Some(stop) = self.stop.take() {
+            stop();
         }
     }
 }

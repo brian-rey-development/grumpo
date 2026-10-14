@@ -42,7 +42,6 @@
   line-height: var(--leading-body);
 }
 
-/* Actions stack, so a second button takes height from the row instead of width from its text. */
 .trailing {
   display: flex;
   flex: none;

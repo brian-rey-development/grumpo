@@ -48,9 +48,8 @@ jobs:
       - name: Run quality gates
         run: scripts/check.sh
 
-      # build-release.sh runs the same production build as the Tauri CLI, which enables the
-      # custom-protocol feature so the app embeds frontendDist and serves it with the production CSP.
-      # It then fails unless codesign --verify --deep --strict passes and the identifier is right.
+      # Builds the way the Tauri CLI does, so the app embeds the frontend and serves it with the
+      # production CSP, then fails unless the signature verifies.
       - name: Build the release bundle and verify its signature
         run: scripts/build-release.sh
 
@@ -94,8 +93,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # The runner image ships an older shellcheck than Homebrew, so pin the version
-      # developers run locally to keep scripts/check.sh and CI in agreement.
+      # The runner image ships an older shellcheck than the one developers run locally.
       - name: Install shellcheck
         env:
           VERSION: v0.11.0
@@ -110,7 +108,7 @@ jobs:
       - name: Lint the shell scripts
         run: |
           shellcheck --version
-          shellcheck -x scripts/*.sh scripts/lib/*.sh
+          shellcheck -x scripts/*.sh scripts/lib/*.sh scripts/ci/*.sh site/src/installer/install.sh
 
   deny:
     name: deny

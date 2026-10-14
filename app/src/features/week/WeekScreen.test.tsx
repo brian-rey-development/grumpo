@@ -48,7 +48,7 @@ describe('WeekScreen history limits', () => {
   it('disables Previous 7 days once another step back would pass the retention period', async () => {
     const user = userEvent.setup();
     routeCommands(invokeMock, {
-      get_settings: () => ({ retentionDays: 30, launchAtLogin: false }),
+      get_settings: () => ({ retentionDays: 30, launchAtLogin: false, autoUpdate: true }),
     });
     renderWeek();
     await screen.findByText('Screen time, last 7 days');

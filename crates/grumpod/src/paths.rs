@@ -3,12 +3,12 @@ use std::path::PathBuf;
 
 use focus_core::ipc::socket_path;
 
-const DEFAULT_STATE_DIR: &str = "/Library/Application Support/Focus";
+const DEFAULT_STATE_DIR: &str = "/Library/Application Support/Grumpo";
 pub const SYSTEM_HOSTS_FILE: &str = "/etc/hosts";
 
-const STATE_DIR_VAR: &str = "FOCUSD_STATE_DIR";
-const HOSTS_FILE_VAR: &str = "FOCUSD_HOSTS_FILE";
-const LOG_FILE_VAR: &str = "FOCUSD_LOG_FILE";
+const STATE_DIR_VAR: &str = "GRUMPOD_STATE_DIR";
+const HOSTS_FILE_VAR: &str = "GRUMPOD_HOSTS_FILE";
+const LOG_FILE_VAR: &str = "GRUMPOD_LOG_FILE";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Paths {

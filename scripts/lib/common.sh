@@ -52,7 +52,7 @@ stop_daemon() {
 }
 
 require_macos_root() {
-  [[ "$(uname -s)" == "Darwin" ]] || fail "focusd only runs on macOS"
+  [[ "$(uname -s)" == "Darwin" ]] || fail "grumpod only runs on macOS"
   [[ $EUID -eq 0 ]] || fail "run this script as root with sudo"
 }
 

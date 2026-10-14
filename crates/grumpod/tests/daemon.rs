@@ -59,11 +59,11 @@ impl Sandbox {
     }
 
     fn log(&self) -> PathBuf {
-        self.dir.path().join("focusd.log")
+        self.dir.path().join("grumpod.log")
     }
 
     fn socket(&self) -> PathBuf {
-        self.dir.path().join("focusd.sock")
+        self.dir.path().join("grumpod.sock")
     }
 
     fn hosts_content(&self) -> String {
@@ -75,13 +75,13 @@ impl Sandbox {
     }
 
     fn command(&self, args: &[&str]) -> Command {
-        let mut command = Command::new(env!("CARGO_BIN_EXE_focusd"));
+        let mut command = Command::new(env!("CARGO_BIN_EXE_grumpod"));
         command
             .args(args)
-            .env("FOCUSD_STATE_DIR", self.state_dir())
-            .env("FOCUSD_HOSTS_FILE", self.hosts())
-            .env("FOCUSD_SOCKET", self.socket())
-            .env("FOCUSD_LOG_FILE", self.log())
+            .env("GRUMPOD_STATE_DIR", self.state_dir())
+            .env("GRUMPOD_HOSTS_FILE", self.hosts())
+            .env("GRUMPOD_SOCKET", self.socket())
+            .env("GRUMPOD_LOG_FILE", self.log())
             .stdin(Stdio::null());
         command
     }
@@ -312,7 +312,7 @@ fn a_second_daemon_is_refused_and_leaves_the_first_one_serving() {
 
     let second = sandbox
         .command(&["run", "--owner-uid", &sandbox.owner_uid()])
-        .env_remove("FOCUSD_LOG_FILE")
+        .env_remove("GRUMPOD_LOG_FILE")
         .output()
         .unwrap();
 

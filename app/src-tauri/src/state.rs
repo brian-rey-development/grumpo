@@ -5,7 +5,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
 use crate::block_screen::BlockScreenHub;
-use crate::concurrency::LockExt;
+use crate::concurrency::{LockExt, StoppableThread};
 use crate::enforcement::EngineHandle;
 use crate::events::AppEvents;
 use crate::icon_cache::IconCache;
@@ -54,6 +54,7 @@ pub struct Workers {
     poller: Mutex<Option<PollerHandle>>,
     status: Arc<StatusHub>,
     activity: Mutex<Option<TrackingActivity>>,
+    updates: Mutex<Option<StoppableThread>>,
 }
 
 impl std::fmt::Debug for Workers {
@@ -69,6 +70,7 @@ impl Workers {
         poller: PollerHandle,
         status: Arc<StatusHub>,
         activity: TrackingActivity,
+        updates: Option<StoppableThread>,
     ) -> Self {
         Self {
             sampler: Mutex::new(Some(sampler)),
@@ -76,6 +78,7 @@ impl Workers {
             poller: Mutex::new(Some(poller)),
             status,
             activity: Mutex::new(Some(activity)),
+            updates: Mutex::new(updates),
         }
     }
 
@@ -86,6 +89,10 @@ impl Workers {
     /// be something that cannot be waiting for the main thread, and the tray guarantees that
     /// by only ever queueing its updates.
     pub fn stop(&self) {
+        // Not joined, because it may be downloading or waiting on the main thread.
+        if let Some(updates) = take(&self.updates) {
+            updates.stop_without_waiting();
+        }
         drop(take(&self.poller));
         self.status.clear_listeners();
         if let Some(sampler) = take(&self.sampler) {

@@ -36,7 +36,7 @@ fn main() -> ExitCode {
     let command = match args::parse(std::env::args_os().skip(1)) {
         Ok(command) => command,
         Err(error) => {
-            eprintln!("focusd: {error}\n\n{USAGE}");
+            eprintln!("grumpod: {error}\n\n{USAGE}");
             return ExitCode::from(EXIT_USAGE);
         }
     };
@@ -44,7 +44,7 @@ fn main() -> ExitCode {
     match cli::execute(command, &Paths::from_env()) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            tracing::error!(%error, "focusd failed");
+            tracing::error!(%error, "grumpod failed");
             ExitCode::from(EXIT_FAILURE)
         }
     }
@@ -62,6 +62,6 @@ fn init_logging(command: &Command) {
         .with_ansi(false)
         .try_init();
     if let Err(error) = installed {
-        eprintln!("focusd: logging is unavailable: {error}");
+        eprintln!("grumpod: logging is unavailable: {error}");
     }
 }

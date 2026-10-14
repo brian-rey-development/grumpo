@@ -24,6 +24,7 @@ pub fn reason_of(error: &DaemonError) -> DaemonUnavailableReason {
             DaemonUnavailableReason::NotResponding
         }
         DaemonError::VersionMismatch { daemon } => version_reason(*daemon),
+        DaemonError::Renamed => DaemonUnavailableReason::ServiceOutdated,
         DaemonError::OtherUser => DaemonUnavailableReason::OtherUser,
     }
 }

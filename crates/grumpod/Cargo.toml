@@ -1,5 +1,5 @@
 [package]
-name = "focusd"
+name = "grumpod"
 description = "Privileged daemon that owns Grumpo rules and enforces the hosts block"
 version.workspace = true
 edition.workspace = true

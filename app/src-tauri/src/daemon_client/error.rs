@@ -6,6 +6,8 @@ use focus_core::ipc::{IpcCodecError, IpcError};
 pub enum DaemonError {
     #[error("the Grumpo service is not installed")]
     NotInstalled,
+    #[error("the Grumpo service is still installed under its earlier name, focusd")]
+    Renamed,
     #[error("the Grumpo service is not responding: {0}")]
     NotResponding(io::Error),
     #[error("the Grumpo service speaks protocol version {daemon}")]
