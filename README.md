@@ -23,13 +23,17 @@ Grumpo is a strict focus blocker and screen time tracker for macOS. You tell him
 | **Schedules and limits** | Block sites and apps always or on a weekly schedule, and give anything a daily limit that resets at midnight. |
 | **Slow to unlock**       | An unlock waits 5, 10, 20 or 40 minutes depending on how many you used today, then asks you to retype a sentence. |
 | **Shows your time**      | Today and Week show your hours, top apps and sites, and progress toward each limit.                |
-| **Private by design**    | Only the app, the domain and timestamps are stored, on your Mac. No account, no telemetry, no network calls. |
+| **Private by design**    | Only the app, the domain and timestamps are stored, on your Mac. No account and no telemetry, and the only request is a daily update check. |
 
 ## Install
 
-Download [Grumpo.dmg](https://github.com/brian-rey-development/grumpo/releases/latest/download/Grumpo.dmg), open it and drag Grumpo into Applications. The download is a universal build for Apple silicon and Intel Macs running macOS 13 or later.
+Download [Grumpo.dmg](https://github.com/brian-rey-development/grumpo/releases/latest/download/Grumpo.dmg), open it and drag Grumpo into Applications. The download is a universal build for Apple silicon and Intel Macs running macOS 13 or later. You can also install from Terminal, which skips the warning below because `curl` does not mark what it downloads.
 
-This build is not notarized by Apple yet, so the first time you open it macOS refuses. Open System Settings, go to Privacy & Security and choose Open Anyway, which you only need to do once. Releases are signed ad hoc until the project has a Developer ID, so after each update macOS asks again for the Automation permission, and Accessibility has to be granted again in Settings. When Grumpo starts, a short welcome flow explains what it does, installs the background service, which asks for your Mac password once because it runs as root, and asks for the permissions below.
+```sh
+curl -fsSL https://brian-rey-development.github.io/grumpo/install.sh | bash
+```
+
+Grumpo is not notarized by Apple, so the first time you open a downloaded copy macOS refuses. Open System Settings, go to Privacy & Security and choose Open Anyway, which you only need to do once, because Grumpo updates itself from then on. When it starts, a short welcome flow explains what it does, installs the background service, which asks for your Mac password once because it runs as root, and asks for the permissions below. Every release is signed with the same certificate, so the permissions you grant carry over to each update.
 
 **Permissions.** Automation is granted per browser, so press Allow next to Chrome, Brave, Edge or Safari, which lets Grumpo read the active tab and close a blocked one. Accessibility is needed only for Firefox, whose active tab cannot be scripted. Both can be refused, in which case Grumpo still tracks time per app and still blocks sites through the hosts file, and only loses the per-site breakdown and tab closing for that browser.
 
@@ -39,7 +43,7 @@ This build is not notarized by Apple yet, so the first time you open it macOS re
 
 Grumpo samples the frontmost app every 2 seconds and, in Chrome, Brave, Edge and Safari, the host of the active tab, with a best effort reading of Firefox through the Accessibility API. Time counts while you are using the Mac, so two minutes without input end a session unless the frontmost app is playing video or in a call, and nothing counts while the screen is locked or the Mac sleeps.
 
-A rule is enforced from two sides. The root daemon, `focusd`, writes blocked sites into a marked block of `/etc/hosts` while a schedule window is open or a limit is spent, covering the bare domain and the prefixes `www.`, `m.`, `mobile.`, `old.`, `new.`, `music.`, `i.` and `amp.` in IPv4 and IPv6. The app, running as you, quits blocked apps and closes the tab of a blocked site in the frontmost window of Chrome, Brave, Edge and Safari, and explains each action with the block screen, a small window that stays on top, names what Grumpo just closed and counts down to the end of the block. A daily limit warns once when 5 minutes remain, then blocks its target until local midnight.
+A rule is enforced from two sides. The root daemon, `grumpod`, writes blocked sites into a marked block of `/etc/hosts` while a schedule window is open or a limit is spent, covering the site with its `www.` and `m.` aliases, plus the few a site really serves such as `old.reddit.com`, in IPv4 and IPv6. The app, running as you, quits blocked apps and closes the tab of a blocked site in the frontmost window of Chrome, Brave, Edge and Safari, and explains each action with the block screen, a small window that stays on top, names what Grumpo just closed and counts down to the end of the block. A daily limit warns once when 5 minutes remain, then blocks its target until local midnight.
 
 ![The block screen saying Nice try, with Grumpo holding up a hand and a countdown to the end of focus time](docs/images/block-schedule.png)
 
@@ -53,7 +57,7 @@ Limits follow a stricter rule, because spent time is the one thing a limit prote
 
 ## Privacy
 
-Grumpo stores only the app id, the app name, the website domain and timestamps. It never stores URLs, paths, queries, page titles or window titles, and it makes no network calls, so there is no telemetry, no analytics and no remote favicons. Time in a Chrome, Brave or Edge incognito window counts toward limits in memory only and is never written to disk. [docs/privacy.md](docs/privacy.md) explains what is stored, where it lives and how to delete it.
+Grumpo stores only the app id, the app name, the website domain and timestamps. It never stores URLs, paths, queries, page titles or window titles, and its only network request is a daily check of the latest release on GitHub, which sends nothing about you and can be turned off in Settings, so there is no telemetry, no analytics and no remote favicons. Time in a Chrome, Brave or Edge incognito window counts toward limits in memory only and is never written to disk. [docs/privacy.md](docs/privacy.md) explains what is stored, where it lives and how to delete it.
 
 ## Known limits
 
@@ -61,11 +65,11 @@ The hosts block applies to every account on the Mac, because `/etc/hosts` is sha
 
 ## Uninstall
 
-Run `sudo scripts/uninstall.sh` from a clone of this repository to remove the daemon and its hosts block, and add `--purge` to delete the daemon state and logs in `/Library/Application Support/Focus` and `/Library/Logs/Focus` as well. The script also removes the Grumpo login item, and `--owner <user|uid>` picks another account. Then quit Grumpo from the menu bar and delete `/Applications/Grumpo.app`. The usage database lives in `~/Library/Application Support/io.github.brian-rey-development.grumpo` and the app logs in `~/Library/Logs/Focus`, so delete those folders to remove every trace. The daemon paths keep the project's earlier name, Focus, on purpose, as [ADR 0012](docs/adr/0012-grumpo-rebrand-and-block-screen.md) explains.
+Run `sudo scripts/uninstall.sh` from a clone of this repository to remove the daemon and its hosts block, and add `--purge` to delete the daemon state and logs in `/Library/Application Support/Grumpo` and `/Library/Logs/Grumpo` as well. The script also removes the Grumpo login item, and `--owner <user|uid>` picks another account. Then quit Grumpo from the menu bar and delete `/Applications/Grumpo.app`. The usage database lives in `~/Library/Application Support/io.github.brian-rey-development.grumpo` and the app logs in `~/Library/Logs/Grumpo`, so delete those folders to remove every trace. The daemon paths keep the project's earlier name, Focus, on purpose, as [ADR 0012](docs/adr/0012-grumpo-rebrand-and-block-screen.md) explains.
 
 ## Build from source
 
-You need Rust (pinned by `rust-toolchain.toml`), Node.js 22 and pnpm. `scripts/build-release.sh` builds `focusd`, builds and signs `Grumpo.app` with the signed daemon and its installer inside, verifies both signatures with `codesign --verify --strict`, and copies the results into `dist/release/`, and `--universal` builds for both architectures. `scripts/package-dmg.sh` then packs the app into `dist/release/Grumpo.dmg` with a checksum.
+You need Rust (pinned by `rust-toolchain.toml`), Node.js 22 and pnpm. `scripts/build-release.sh` builds `grumpod`, builds and signs `Grumpo.app` with the signed daemon and its installer inside, verifies both signatures with `codesign --verify --strict`, and copies the results into `dist/release/`, and `--universal` builds for both architectures. `scripts/package-dmg.sh` then packs the app into `dist/release/Grumpo.dmg` with a checksum.
 
 ```sh
 scripts/build-release.sh
@@ -77,23 +81,25 @@ Without further setup the script signs ad hoc, and an ad hoc signature changes w
 To install the service from Terminal instead, which is the path for a machine without a graphical session, run the installer yourself. It is idempotent, keeps a backup it restores on failure, and on a machine that still has the old `focus-hosts` setup it imports the domain list and schedule before removing the legacy LaunchDaemon.
 
 ```sh
-scripts/build-release.sh && sudo scripts/install.sh --binary dist/release/focusd
+scripts/build-release.sh && sudo scripts/install.sh --binary dist/release/grumpod
 ```
 
 If you ran this app under its earlier name, Focus, quit it first and remove `/Applications/Focus.app`. Your history and settings move to the new data folder on first start, and `tccutil reset All io.github.brian-rey-development.focus` clears the stale permission entries the old app left in System Settings.
 
 ## Development
 
-In the `app` directory, `pnpm install` followed by `pnpm tauri dev` starts the app, and `scripts/check.sh` runs every quality gate. A development app talks to a daemon you start yourself against a temporary root, and [docs/development.md](docs/development.md) covers that setup and how to add a Tauri command end to end. The landing page lives in `site/`, an Astro and Tailwind project that `pnpm dev` serves locally and `.github/workflows/site.yml` deploys to GitHub Pages, at `https://<owner>.github.io/grumpo/` by default or at your own domain once the repository variable `SITE_DOMAIN` is set. It ships structured data for the app, the FAQ and the install steps, a sitemap, `robots.txt` and `llms.txt`, and it redeploys whenever a release is published. `scripts/brand/generate.py` rebuilds the cover, social previews, logos, favicons and site images from `brand/` and `docs/images/`. Pushing a `v*` tag that matches the app version builds a universal `Grumpo.dmg` and attaches it to a draft release.
+In the `app` directory, `pnpm install` followed by `pnpm tauri dev` starts the app, and `scripts/check.sh` runs every quality gate. A development app talks to a daemon you start yourself against a temporary root, and [docs/development.md](docs/development.md) covers that setup and how to add a Tauri command end to end. The landing page lives in `site/`, an Astro and Tailwind project that `pnpm dev` serves locally and `.github/workflows/site.yml` deploys to GitHub Pages, at `https://<owner>.github.io/grumpo/` by default or at your own domain once the repository variable `SITE_DOMAIN` is set. It ships structured data for the app, the FAQ and the install steps, a sitemap, `robots.txt`, `llms.txt` and the Terminal installer, and it redeploys whenever a release is published. `scripts/brand/generate.py` rebuilds the cover, social previews, logos, favicons and site images from `brand/` and `docs/images/`.
+
+Pushing a `v*` tag that matches the app version builds a universal `Grumpo.dmg` and the signed update archive with its `latest.json`, and attaches them to a draft release, which reaches the website and installed copies once you publish it. Running the Release workflow by hand does the same build without releasing, to try the signing setup. The workflow needs four secrets, which `scripts/create-release-keys.sh --upload` creates once and stores, keeping a backup in `~/.grumpo-signing` that you should save somewhere safe, and [ADR 0013](docs/adr/0013-self-signed-releases-and-automatic-updates.md) explains why releases carry a self-signed certificate and how updates work.
 
 ```
 crates/focus-core     pure library for rules, unlock, enforcement plan, hosts rendering and IPC protocol
-crates/focusd         root LaunchDaemon that owns rules and the hosts file
+crates/grumpod         root LaunchDaemon that owns rules and the hosts file
 app/                  Tauri app (React UI in app/src, Rust backend in app/src-tauri)
 site/                 landing page (Astro, Tailwind)
 brand/                mascot, stickers, icon, logos and cover art
 packaging/macos/      LaunchDaemon plist and log rotation config
-scripts/              check, build-release, package-dmg, install, uninstall, gen-bindings, brand/
+scripts/              check, build-release, package-dmg, package-update, release keys, install, uninstall, gen-bindings, ci/, brand/
 docs/                 architecture, privacy, threat model, development guide, ADRs and screenshots
 ```
 

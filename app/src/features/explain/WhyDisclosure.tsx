@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { ChevronRight } from 'lucide-react';
 import { useId, useState } from 'react';
 
@@ -10,7 +10,6 @@ import styles from './WhyDisclosure.module.css';
 
 const ICON_SIZE = 14;
 const OPEN_TURN_DEGREES = 90;
-const PANEL_RISE_PX = -4;
 
 type Details = Pick<Explanation, 'never' | 'without' | 'howTitle' | 'how'>;
 
@@ -35,7 +34,6 @@ function Reasons({ explanation }: { explanation: Details }) {
   );
 }
 
-/** The reasons behind a permission or the service, tucked away so the row stays easy to scan. */
 export function WhyDisclosure({ explanation }: { explanation: Details }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -63,17 +61,21 @@ export function WhyDisclosure({ explanation }: { explanation: Details }) {
         </motion.span>
         {explainCopy.summary}
       </button>
-      {open ? (
-        <motion.div
-          id={panelId}
-          className={styles.panel}
-          initial={{ opacity: 0, y: PANEL_RISE_PX }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={slide}
-        >
-          <Reasons explanation={explanation} />
-        </motion.div>
-      ) : null}
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            key="panel"
+            id={panelId}
+            className={styles.panel}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={slide}
+          >
+            <Reasons explanation={explanation} />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

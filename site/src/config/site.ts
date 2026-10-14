@@ -1,4 +1,5 @@
 const REPO = 'https://github.com/brian-rey-development/grumpo';
+const DOWNLOAD = `${REPO}/releases/latest/download/Grumpo.dmg`;
 
 export const site = {
   name: 'Grumpo',
@@ -18,7 +19,9 @@ export const site = {
   ],
   minimumMacOS: '13',
   repo: REPO,
-  download: `${REPO}/releases/latest/download/Grumpo.dmg`,
+  download: DOWNLOAD,
+  checksum: `${DOWNLOAD}.sha256`,
+  installScriptPath: 'install.sh',
   releases: `${REPO}/releases`,
   docs: {
     privacy: `${REPO}/blob/main/docs/privacy.md`,
@@ -43,4 +46,8 @@ export function asset(path: string): string {
 export function absolute(path: string, base: URL | undefined): string {
   if (base === undefined) throw new Error('astro.config.ts needs a site URL');
   return new URL(asset(path), base).toString();
+}
+
+export function installCommand(base: URL | undefined): string {
+  return `curl -fsSL ${absolute(site.installScriptPath, base)} | bash`;
 }

@@ -46,7 +46,19 @@ function characterOf(label: unknown): [label: string, character: string] {
   return [label, String.fromCodePoint(codePoint)];
 }
 
+function hostsCase(entry: unknown): [site: string, hosts: string[]] {
+  if (!Array.isArray(entry) || typeof entry[0] !== 'string' || !Array.isArray(entry[1])) {
+    throw new Error('A hosts vector is not a site and its hosts');
+  }
+  const list: unknown[] = entry[1];
+  if (!list.every((host): host is string => typeof host === 'string')) {
+    throw new Error('A host is not a string');
+  }
+  return [entry[0], list];
+}
+
 const domain = readVectors('domain.json');
+const hosts = readVectors('hosts.json');
 const whitespace = readVectors('whitespace.json');
 
 /** The cases the service and the app both have to agree on, shared with the Rust tests. */
@@ -54,6 +66,9 @@ export const ACCEPTED: [input: string, expected: string][] = listAt(domain, 'acc
 export const REJECTED: [input: string, problem: SiteProblem][] = listAt(domain, 'rejected').map(
   problemPair,
 );
+
+/** Each site with the hostnames the service writes for it. */
+export const HOSTS: [site: string, hosts: string[]][] = listAt(hosts, 'hosts').map(hostsCase);
 
 /** Pairs for `it.each`, so a failing case names the code point instead of an invisible character. */
 export const RUST_WHITESPACE: [label: string, character: string][] = listAt(

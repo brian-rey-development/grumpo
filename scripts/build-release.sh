@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck source-path=SCRIPTDIR
-# Builds the release artifacts (focusd, Grumpo.app and the .dmg) into dist/release/. Grumpo.app carries
-# focusd and the installer, so the app can install the service itself.
+# Builds the release artifacts (grumpod, Grumpo.app and the .dmg) into dist/release/. Grumpo.app carries
+# grumpod and the installer, so the app can install the service itself.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,7 +22,7 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 readonly ROOT
 readonly APP_DIR="$ROOT/app"
 readonly OUT_DIR="$ROOT/dist/release"
-readonly BUNDLED_DAEMON_PATH="Contents/MacOS/focusd"
+readonly BUNDLED_DAEMON_PATH="Contents/MacOS/grumpod"
 readonly MAIN_EXECUTABLE_PATH="Contents/MacOS/$APP_NAME"
 readonly BUNDLED_INSTALLER_PATH="Contents/Resources/installer/scripts/install.sh"
 readonly BUNDLED_PACKAGING_PATH="Contents/Resources/installer/packaging/macos"
@@ -31,8 +31,8 @@ readonly BUNDLED_INSTALLER_FILES=(
   "Contents/Resources/installer/scripts/lib/common.sh"
   "Contents/Resources/installer/scripts/lib/legacy.sh"
   "Contents/Resources/installer/scripts/lib/rollback.sh"
-  "Contents/Resources/installer/packaging/macos/io.github.brian-rey-development.focusd.plist"
-  "Contents/Resources/installer/packaging/macos/focusd.newsyslog.conf"
+  "Contents/Resources/installer/packaging/macos/io.github.brian-rey-development.grumpod.plist"
+  "Contents/Resources/installer/packaging/macos/grumpod.newsyslog.conf"
 )
 TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/target}"
 readonly TARGET_DIR
@@ -48,17 +48,17 @@ usage() {
   cat <<USAGE
 usage: scripts/build-release.sh [--universal]
 
-Builds focusd, $APP_NAME.app and the .dmg, and collects them in dist/release/.
+Builds grumpod, $APP_NAME.app and the .dmg, and collects them in dist/release/.
 
   (default)     Build for this Mac's architecture only.
   --universal   Build for $ARM_TARGET and $INTEL_TARGET and merge them.
 
 Environment:
-  FOCUS_SIGNING_IDENTITY   Keychain identity that signs $APP_NAME.app and focusd. Without it both
+  FOCUS_SIGNING_IDENTITY   Keychain identity that signs $APP_NAME.app and grumpod. Without it both
                            are signed ad hoc, and macOS asks for permissions after each rebuild.
 
-$APP_NAME.app carries the signed focusd and the installer, and installs the service from its
-Settings. The standalone focusd in dist/release/ is for scripts/install.sh.
+$APP_NAME.app carries the signed grumpod and the installer, and installs the service from its
+Settings. The standalone grumpod in dist/release/ is for scripts/install.sh.
 USAGE
 }
 
@@ -109,44 +109,44 @@ require_universal() {
 }
 
 build_daemon() {
-  step "Building focusd (release, host architecture)"
-  (cd "$ROOT" && cargo build --release -p focusd)
-  DAEMON_BINARY="$TARGET_DIR/release/focusd"
+  step "Building grumpod (release, host architecture)"
+  (cd "$ROOT" && cargo build --release -p grumpod)
+  DAEMON_BINARY="$TARGET_DIR/release/grumpod"
 }
 
 build_daemon_universal() {
   local target
   for target in "$ARM_TARGET" "$INTEL_TARGET"; do
-    step "Building focusd (release, $target)"
-    (cd "$ROOT" && cargo build --release -p focusd --target "$target")
+    step "Building grumpod (release, $target)"
+    (cd "$ROOT" && cargo build --release -p grumpod --target "$target")
   done
-  step "Merging the focusd binaries with lipo"
-  DAEMON_BINARY="$TARGET_DIR/$UNIVERSAL_TARGET/release/focusd"
+  step "Merging the grumpod binaries with lipo"
+  DAEMON_BINARY="$TARGET_DIR/$UNIVERSAL_TARGET/release/grumpod"
   mkdir -p "$(dirname "$DAEMON_BINARY")"
   lipo -create -output "$DAEMON_BINARY" \
-    "$TARGET_DIR/$ARM_TARGET/release/focusd" \
-    "$TARGET_DIR/$INTEL_TARGET/release/focusd"
+    "$TARGET_DIR/$ARM_TARGET/release/grumpod" \
+    "$TARGET_DIR/$INTEL_TARGET/release/grumpod"
   require_universal "$DAEMON_BINARY"
 }
 
 # Signed before it goes into the app, because the app seal covers it and signing it afterwards
 # would break the seal.
 stage_daemon() {
-  step "Signing the focusd that goes into $APP_NAME.app"
+  step "Signing the grumpod that goes into $APP_NAME.app"
   local path
   for path in "$ROOT" "$STAGING_DIR"; do
     [[ "$path" != *[\"\\]* ]] || fail "the path $path must not contain quotes or backslashes"
   done
   mkdir -p "$STAGING_DIR"
-  cp -p "$DAEMON_BINARY" "$STAGING_DIR/focusd"
-  DAEMON_BINARY="$STAGING_DIR/focusd"
+  cp -p "$DAEMON_BINARY" "$STAGING_DIR/grumpod"
+  DAEMON_BINARY="$STAGING_DIR/grumpod"
   sign_daemon "$DAEMON_BINARY"
 }
 
 # Passed only from here, so tauri dev, cargo test and scripts/check.sh work without these files.
 # The paths go into JSON as they are, so stage_daemon has already refused the ones that would break it.
 tauri_bundle_config() {
-  printf '{"bundle":{"macOS":{"files":{"MacOS/focusd":"%s",' "$DAEMON_BINARY"
+  printf '{"bundle":{"macOS":{"files":{"MacOS/grumpod":"%s",' "$DAEMON_BINARY"
   printf '"Resources/installer/scripts/install.sh":"%s/scripts/install.sh",' "$ROOT"
   printf '"Resources/installer/scripts/lib":"%s/scripts/lib",' "$ROOT"
   printf '"Resources/installer/packaging/macos":"%s/packaging/macos"}}}}' "$ROOT"
@@ -195,7 +195,7 @@ collect() {
   [[ -d "$BUNDLE_ROOT/macos/$APP_NAME.app" ]] || fail "$APP_NAME.app was not produced in $BUNDLE_ROOT/macos"
   rm -rf "$OUT_DIR"
   mkdir -p "$OUT_DIR"
-  cp -p "$DAEMON_BINARY" "$OUT_DIR/focusd"
+  cp -p "$DAEMON_BINARY" "$OUT_DIR/grumpod"
   ditto "$BUNDLE_ROOT/macos/$APP_NAME.app" "$OUT_DIR/$APP_NAME.app"
   if [[ $DMG_BUILT -eq 1 ]]; then
     dmg="$(first_dmg)"
@@ -212,7 +212,7 @@ verify_main_executable() {
 
 verify_bundled_installer() {
   local app="$1" path
-  step "Checking that $(basename "$app") carries focusd and the installer"
+  step "Checking that $(basename "$app") carries grumpod and the installer"
   for path in "$BUNDLED_DAEMON_PATH" "$BUNDLED_INSTALLER_PATH" "$BUNDLED_PACKAGING_PATH" \
     "${BUNDLED_INSTALLER_FILES[@]}"; do
     [[ -e "$app/$path" ]] || fail "$(basename "$app") is missing $path"
@@ -223,7 +223,7 @@ verify_bundled_installer() {
 summarize() {
   step "Release artifacts"
   (cd "$OUT_DIR" && du -sh -- *)
-  lipo -info "$OUT_DIR/focusd"
+  lipo -info "$OUT_DIR/grumpod"
   if [[ $DMG_BUILT -eq 0 ]]; then
     warn "no .dmg was built, only $APP_NAME.app is available"
   fi
@@ -237,7 +237,7 @@ If you used this app under its earlier name Focus, clear its stale permission en
   tccutil reset All io.github.brian-rey-development.focus
 
 Developers can install the service from Terminal instead:
-  sudo scripts/install.sh --binary dist/release/focusd
+  sudo scripts/install.sh --binary dist/release/grumpod
 NEXT
 }
 
@@ -259,7 +259,7 @@ main() {
   verify_signature "$OUT_DIR/$APP_NAME.app" "$APP_DIR"
   verify_main_executable "$OUT_DIR/$APP_NAME.app"
   verify_bundled_installer "$OUT_DIR/$APP_NAME.app"
-  verify_daemon_signature "$OUT_DIR/focusd"
+  verify_daemon_signature "$OUT_DIR/grumpod"
   summarize
 }
 

@@ -15,6 +15,7 @@ pub mod sessions;
 mod settings;
 #[cfg(test)]
 pub(crate) mod test_support;
+mod updates;
 
 use std::fmt;
 use std::path::Path;

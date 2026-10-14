@@ -75,6 +75,16 @@ fn a_blocked_site_in_a_browser_closes_the_tab_and_names_the_rule_domain() {
 }
 
 #[test]
+fn a_subdomain_the_hosts_file_leaves_open_is_left_alone() {
+    let activity = browsing(Browser::Firefox, "music.youtube.com");
+
+    assert_eq!(
+        decide_now(Some(&activity), &blocking(&[], &["youtube.com"])).len(),
+        0
+    );
+}
+
+#[test]
 fn a_domain_that_merely_ends_like_a_blocked_one_is_not_blocked() {
     let activity = browsing(Browser::Chrome, "notyoutube.com");
 
@@ -95,12 +105,12 @@ fn private_browsing_is_enforced_like_any_other() {
 }
 
 #[test]
-fn firefox_tabs_cannot_be_closed_so_nothing_is_done() {
-    let activity = browsing(Browser::Firefox, "youtube.com");
+fn a_blocked_site_in_firefox_is_announced_and_its_tab_left_open() {
+    let activity = browsing(Browser::Firefox, "www.youtube.com");
 
     assert_eq!(
-        decide_now(Some(&activity), &blocking(&[], &["youtube.com"])).len(),
-        0
+        decide_now(Some(&activity), &blocking(&[], &["youtube.com"])),
+        [site_blocked_notice("youtube.com")]
     );
 }
 

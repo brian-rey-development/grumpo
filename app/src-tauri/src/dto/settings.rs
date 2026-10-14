@@ -6,4 +6,5 @@ use serde::{Deserialize, Serialize};
 pub struct Settings {
     pub retention_days: u16,
     pub launch_at_login: bool,
+    pub auto_update: bool,
 }

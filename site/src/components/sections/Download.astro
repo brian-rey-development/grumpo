@@ -1,8 +1,10 @@
 ---
 import Button from '@/components/ui/Button.astro';
+import CommandRow from '@/components/ui/CommandRow.astro';
+import CopyCommand from '@/components/ui/CopyCommand.astro';
 import Icon from '@/components/ui/Icon.astro';
-import { installSteps } from '@/config/content';
-import { asset, site } from '@/config/site';
+import { installSteps, terminalInstall } from '@/config/content';
+import { asset, installCommand, site } from '@/config/site';
 
 const buildCommand = `git clone ${site.repo}.git
 cd grumpo && scripts/build-release.sh`;
@@ -26,7 +28,7 @@ cd grumpo && scripts/build-release.sh`;
         {`Free and open source. For macOS ${site.minimumMacOS} or later.`}
       </p>
       <div class="mt-8">
-        <Button href={site.download} size="lg">
+        <Button href={site.download} size="lg" data-download>
           <Icon name="apple" class="size-5 -translate-y-px" />
           Download for Mac
         </Button>
@@ -45,15 +47,16 @@ cd grumpo && scripts/build-release.sh`;
       ))}
     </ol>
 
-    <div class="mt-16 grid gap-6 border-t-3 border-ink pt-10 lg:grid-cols-[1fr_1.4fr] lg:items-center">
-      <div>
-        <h3 class="text-2xl tracking-tight">Build it yourself</h3>
-        <p class="mt-2 text-ink-soft">Needs Rust, Node 22 and pnpm.</p>
-      </div>
-      <pre
-        tabindex="0"
-        class="overflow-x-auto rounded-control border-3 border-ink bg-ink p-5 font-mono text-sm leading-relaxed text-on-ink"
-      ><code>{buildCommand}</code></pre>
+    <div class="mt-16 flex flex-col gap-10">
+      <CommandRow title={terminalInstall.title} body={terminalInstall.body}>
+        <CopyCommand command={installCommand(Astro.site)} />
+      </CommandRow>
+      <CommandRow title="Build it yourself" body="Needs Rust, Node 22 and pnpm.">
+        <pre
+          tabindex="0"
+          class="overflow-x-auto rounded-control border-3 border-ink bg-ink p-5 font-mono text-sm leading-relaxed text-on-ink"
+        ><code>{buildCommand}</code></pre>
+      </CommandRow>
     </div>
   </div>
 </section>

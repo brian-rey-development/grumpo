@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck source-path=SCRIPTDIR
-# Installs or upgrades the focusd LaunchDaemon. Run with sudo from the user who owns the Grumpo app,
+# Installs or upgrades the grumpod LaunchDaemon. Run with sudo from the user who owns the Grumpo app,
 # or let Grumpo.app run it through the macOS administrator prompt, which sets no SUDO_UID, a minimal
 # PATH and no terminal, and so passes --binary and --owner.
 set -euo pipefail
@@ -14,6 +14,8 @@ readonly SCRIPT_DIR
 source "$SCRIPT_DIR/lib/layout.sh"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
+# shellcheck source=lib/focusd.sh
+source "$SCRIPT_DIR/lib/focusd.sh"
 # shellcheck source=lib/legacy.sh
 source "$SCRIPT_DIR/lib/legacy.sh"
 # shellcheck source=lib/rollback.sh
@@ -22,9 +24,9 @@ source "$SCRIPT_DIR/lib/rollback.sh"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 readonly ROOT
 readonly PLIST_TEMPLATE="$ROOT/packaging/macos/${LABEL}.plist"
-readonly NEWSYSLOG_SOURCE="$ROOT/packaging/macos/focusd.newsyslog.conf"
+readonly NEWSYSLOG_SOURCE="$ROOT/packaging/macos/grumpod.newsyslog.conf"
 
-BINARY_SOURCE="$ROOT/target/release/focusd"
+BINARY_SOURCE="$ROOT/target/release/grumpod"
 OWNER_ARG=""
 OWNER_UID=""
 
@@ -41,9 +43,9 @@ usage() {
   cat <<USAGE
 usage: sudo scripts/install.sh [--binary <path>] [--owner <user|uid>] [--skip-legacy-import]
 
-Installs focusd as a LaunchDaemon that accepts connections only from its owner.
+Installs grumpod as a LaunchDaemon that accepts connections only from its owner.
 The owner is the user who ran sudo, or the one given with --owner.
-Without --binary it installs target/release/focusd. Grumpo.app passes the focusd it carries.
+Without --binary it installs target/release/grumpod. Grumpo.app passes the grumpod it carries.
 With --skip-legacy-import the rules of an old focus-hosts install are not carried over,
 and its files are still removed.
 USAGE
@@ -84,7 +86,7 @@ preflight() {
   require_macos_root
   acquire_install_lock
   resolve_owner "$OWNER_ARG"
-  [[ -f "$BINARY_SOURCE" && -x "$BINARY_SOURCE" ]] || fail "no executable focusd at $BINARY_SOURCE, build it with: scripts/build-release.sh"
+  [[ -f "$BINARY_SOURCE" && -x "$BINARY_SOURCE" ]] || fail "no executable grumpod at $BINARY_SOURCE, build it with: scripts/build-release.sh"
   [[ -f "$PLIST_TEMPLATE" ]] || fail "missing $PLIST_TEMPLATE"
   [[ -f "$NEWSYSLOG_SOURCE" ]] || fail "missing $NEWSYSLOG_SOURCE"
 }
@@ -106,8 +108,8 @@ save_previous_install() {
   save_if_present "$PLIST_DEST" PREVIOUS_PLIST_SAVED
 }
 
-stop_previous_focusd() {
-  step "Stopping any running focusd"
+stop_previous_grumpod() {
+  step "Stopping any running grumpod"
   CHANGES_STARTED=1
   stop_daemon "$LABEL"
   rm -f "$SOCKET"
@@ -154,29 +156,31 @@ install_launch_files() {
 }
 
 start_daemon() {
-  step "Starting focusd"
+  step "Starting grumpod"
   NEW_DAEMON_STARTED=1
   launchctl enable "system/$LABEL"
   launchctl bootstrap system "$PLIST_DEST"
   poll "$BINARY_DEST" ping ||
-    fail "focusd did not answer on $SOCKET within $WAIT_SECONDS seconds, check $LOG_DIR/focusd.log"
+    fail "grumpod did not answer on $SOCKET within $WAIT_SECONDS seconds, check $LOG_DIR/grumpod.log"
 }
 
 main() {
   parse_args "$@"
   preflight
   save_previous_install
-  stop_previous_focusd
+  stop_previous_grumpod
   save_previous_state
   install_binary
   create_directories
+  migrate_focusd
   migrate_legacy
   install_launch_files
   start_daemon
   remove_legacy
+  remove_focusd
   discard_previous_install
   CURRENT_STEP="finished"
-  printf '\nfocusd is running as %s for uid %s.\n  socket  %s\n  state   %s\n  log     %s/focusd.log\n' \
+  printf '\ngrumpod is running as %s for uid %s.\n  socket  %s\n  state   %s\n  log     %s/grumpod.log\n' \
     "$LABEL" "$OWNER_UID" "$SOCKET" "$STATE_DIR" "$LOG_DIR"
 }
 

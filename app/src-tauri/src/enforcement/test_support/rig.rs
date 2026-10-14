@@ -51,7 +51,9 @@ impl Rig {
     pub fn offline() -> Self {
         let clock = Arc::new(FakeClock::at(T0));
         let hub = StatusHub::with_clock(
-            Arc::new(DaemonClient::new(PathBuf::from("/nonexistent/focusd.sock"))),
+            Arc::new(DaemonClient::new(PathBuf::from(
+                "/nonexistent/grumpod.sock",
+            ))),
             clock.clone(),
         );
         hub.refresh();

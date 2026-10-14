@@ -11,9 +11,11 @@ vi.mock('@tauri-apps/api/core', () => ({ invoke: invokeMock }));
 
 import type { CommandFailure } from '@/ipc/errors';
 import type { FocusStatus } from '@/ipc/generated/FocusStatus';
+import type { Permissions } from '@/ipc/generated/Permissions';
 import type { Rules } from '@/ipc/generated/Rules';
 import type { Settings } from '@/ipc/generated/Settings';
 import {
+  hasPendingPermission,
   useAppIcon,
   useClockStyle,
   useDayReport,
@@ -33,6 +35,7 @@ import {
 } from '@/ipc/mutations';
 import { queryKeys } from '@/ipc/queryKeys';
 import { watchWindowFocus } from '@/ipc/windowFocus';
+import { ALLOWED_PERMISSIONS, DEFAULT_SETTINGS } from '@/test/ipc';
 import { createTestQueryClient } from '@/test/render';
 
 const STATUS: FocusStatus = {
@@ -185,7 +188,7 @@ describe('status mutations', () => {
 
 describe('other mutations', () => {
   it('updating settings replaces the cached settings', async () => {
-    const settings: Settings = { retentionDays: 30, launchAtLogin: true };
+    const settings: Settings = { ...DEFAULT_SETTINGS, retentionDays: 30, launchAtLogin: true };
     invokeMock.mockResolvedValue(settings);
     const { client, Wrapper } = setup();
     const { result } = renderHook(() => useUpdateSettings(), { wrapper: Wrapper });
@@ -269,5 +272,22 @@ describe('refetching when the window gets focus', () => {
     await Promise.resolve();
 
     expect(invokeMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('following permissions that can still change', () => {
+  it('settles once everything installed is allowed', () => {
+    expect(hasPendingPermission(ALLOWED_PERMISSIONS)).toBe(false);
+  });
+
+  it('follows Accessibility until it is allowed', () => {
+    expect(hasPendingPermission({ ...ALLOWED_PERMISSIONS, accessibility: 'denied' })).toBe(true);
+  });
+
+  it('follows an installed browser that is not allowed yet', () => {
+    const browsers: Permissions['browsers'] = [
+      { browser: 'safari', installed: true, permission: 'notDetermined' },
+    ];
+    expect(hasPendingPermission({ ...ALLOWED_PERMISSIONS, browsers })).toBe(true);
   });
 });

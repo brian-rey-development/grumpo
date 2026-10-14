@@ -1,6 +1,6 @@
 import { Lock } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 
 import { Button } from '@/components/Button/Button';
 import { Mascot, type MascotPose } from '@/components/Mascot/Mascot';
@@ -51,6 +51,7 @@ function AnimatedMascot({ pose }: { pose: MascotPose }) {
     <motion.div
       ref={ref}
       className={styles.stage}
+      data-pose={pose}
       initial={hidden}
       animate={decoded ? AT_REST : hidden}
       transition={{ default: spring.squash, opacity: tween.fast }}
@@ -66,12 +67,32 @@ function AnimatedMascot({ pose }: { pose: MascotPose }) {
   );
 }
 
-function StrictNote() {
+function StrictNote({ className }: { className: string | undefined }) {
   return (
-    <p className={styles.strict}>
+    <p className={className}>
       <Lock className={styles.lock} size={ICON_SIZE} fill="currentColor" aria-hidden="true" />
       {blockerCopy.strict}
     </p>
+  );
+}
+
+/**
+ * The countdown and the strict note share one card, and a block with no end shows the note alone.
+ * Returned as an element, not a component, so AnimatePresence sees the keyed lines and fades them out.
+ */
+function statusFor(screen: BlockScreen): ReactNode {
+  if (screen.until === null) {
+    return screen.strict ? (
+      <Rise key="strict" order={1}>
+        <StrictNote className={styles.strict} />
+      </Rise>
+    ) : null;
+  }
+  return (
+    <Rise key="countdown" order={1} className={styles.panel}>
+      <Countdown until={screen.until} reason={screen.reason} />
+      {screen.strict ? <StrictNote className={styles.panelStrict} /> : null}
+    </Rise>
   );
 }
 
@@ -103,30 +124,21 @@ export function BlockScreenView({ screen, onDismiss }: BlockScreenViewProps) {
     >
       <EntranceProvider>
         <div className={styles.column}>
-          <AnimatedMascot pose={poseFor(screen)} />
-          <Rise order={0} className={styles.copy}>
-            <h1 id={headlineId} className={styles.headline}>
-              {headlineFor(screen.id)}
-            </h1>
-            <p id={bodyId} className={styles.body}>
-              {bodyFor(screen)}
-            </p>
-          </Rise>
-          <div className={styles.status}>
-            <AnimatePresence>
-              {screen.until === null ? null : (
-                <Rise key="countdown" order={1} className={styles.panel}>
-                  <Countdown until={screen.until} reason={screen.reason} />
-                </Rise>
-              )}
-              {screen.strict ? (
-                <Rise key="strict" order={2}>
-                  <StrictNote />
-                </Rise>
-              ) : null}
-            </AnimatePresence>
+          <div className={styles.hero}>
+            <AnimatedMascot pose={poseFor(screen)} />
+            <Rise order={0} className={styles.copy}>
+              <h1 id={headlineId} className={styles.headline}>
+                {headlineFor(screen.id)}
+              </h1>
+              <p id={bodyId} className={styles.body}>
+                {bodyFor(screen)}
+              </p>
+            </Rise>
           </div>
-          <Rise order={3} className={styles.actions}>
+          <div className={styles.status}>
+            <AnimatePresence>{statusFor(screen)}</AnimatePresence>
+          </div>
+          <Rise order={2} className={styles.actions}>
             <Button
               ref={dismissRef}
               variant="primary"

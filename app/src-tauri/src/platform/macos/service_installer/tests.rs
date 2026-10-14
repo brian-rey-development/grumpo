@@ -29,7 +29,7 @@ fn complete_bundle() -> (tempfile::TempDir, PathBuf) {
 fn bundled_in(root: &Path) -> BundledInstaller {
     BundledInstaller {
         installer_dir: root.join("installer"),
-        daemon: root.join("focusd"),
+        daemon: root.join("grumpod"),
     }
 }
 
@@ -214,7 +214,7 @@ impl Sandbox {
         let outside = root.path().join("outside.sh");
         fs::write(&outside, "outside").unwrap();
         std::os::unix::fs::symlink(&outside, scripts.join("lib").join("outside.sh")).unwrap();
-        let daemon = root.path().join("focusd");
+        let daemon = root.path().join("grumpod");
         fs::copy(daemon_source, &daemon).unwrap();
         let bundled = BundledInstaller {
             installer_dir,
@@ -267,7 +267,7 @@ fn the_installer_runs_from_a_private_copy_with_a_clean_environment() {
         args.starts_with(&format!("--binary {LOCKED_WORK_DIRS}")),
         "{args}"
     );
-    assert!(args.ends_with("/focusd --owner 501"), "{args}");
+    assert!(args.ends_with("/grumpod --owner 501"), "{args}");
     assert_eq!(recorded_value(&record, "home"), "/var/root");
     assert_eq!(recorded_value(&record, "tmpdir"), "unset");
     assert_eq!(recorded_value(&record, "marker"), "unset");
@@ -342,7 +342,7 @@ fn any_other_failure_is_a_failed_install() {
 
 #[test]
 fn the_failure_carries_the_status_and_none_of_the_installer_output() {
-    let stderr = "error: no executable focusd at /Users/someone/Grumpo.app (7)";
+    let stderr = "error: no executable grumpod at /Users/someone/Grumpo.app (7)";
     let error = outcome_of(false, stderr).unwrap_err();
     assert_eq!(
         error.to_string(),

@@ -10,16 +10,16 @@ fn sites(hosts: &[&str]) -> BTreeSet<Domain> {
         .collect()
 }
 
-const EXPECTED_PREFIXES: [&str; 9] = [
-    "", "www.", "m.", "mobile.", "old.", "new.", "music.", "i.", "amp.",
-];
+const HOSTS_VECTORS: &str = include_str!("../../tests/vectors/hosts.json");
+const COMMON_PREFIXES: [&str; 3] = ["", "www.", "m."];
 
-/// The block for `domains`, which lists every alias of each in sorted order.
+/// The block for `domains`, sites without aliases of their own, which lists each with the
+/// common aliases in sorted order.
 fn block_for(domains: &[&str]) -> String {
     let aliases: BTreeSet<String> = domains
         .iter()
         .flat_map(|domain| {
-            EXPECTED_PREFIXES
+            COMMON_PREFIXES
                 .iter()
                 .map(move |prefix| format!("{prefix}{domain}"))
         })
@@ -44,8 +44,8 @@ fn block(entries: &[&str]) -> String {
 
 #[test]
 fn appends_a_block_with_both_address_families_for_every_alias() {
-    let rendered = render(BASE, &sites(&["youtube.com"]));
-    let expected = format!("{BASE}{}", block_for(&["youtube.com"]));
+    let rendered = render(BASE, &sites(&["tiktok.com"]));
+    let expected = format!("{BASE}{}", block_for(&["tiktok.com"]));
     assert_eq!(rendered, expected);
 }
 
@@ -78,8 +78,8 @@ fn no_sites_removes_the_block_and_adds_nothing() {
 #[test]
 fn replaces_an_existing_current_block() {
     let first = render(BASE, &sites(&["youtube.com"]));
-    let second = render(&first, &sites(&["reddit.com"]));
-    assert_eq!(second, format!("{BASE}{}", block_for(&["reddit.com"])));
+    let second = render(&first, &sites(&["tiktok.com"]));
+    assert_eq!(second, format!("{BASE}{}", block_for(&["tiktok.com"])));
 }
 
 #[test]
@@ -98,6 +98,18 @@ fn migrates_a_legacy_block_into_the_current_one() {
     assert!(!rendered.contains("FOCUS-HOSTS"));
     assert!(!rendered.contains("old.com"));
     assert_eq!(rendered, format!("{BASE}{}", block_for(&["new.com"])));
+}
+
+#[test]
+fn replaces_the_block_written_under_the_daemons_earlier_name() {
+    let earlier = format!(
+        "{BASE}# >>> focus: managed block, do not edit >>>\n0.0.0.0 old.com\n# <<< focus: managed block <<<\n10.0.0.1 intranet\n"
+    );
+    let rendered = render(&earlier, &sites(&["new.com"]));
+    assert_eq!(
+        rendered,
+        format!("{BASE}10.0.0.1 intranet\n{}", block_for(&["new.com"]))
+    );
 }
 
 #[test]
@@ -208,53 +220,67 @@ fn rendering_is_idempotent() {
     }
 }
 
+#[derive(serde::Deserialize)]
+struct HostsVectors {
+    hosts: Vec<(String, Vec<String>)>,
+}
+
+/// The cases are in `tests/vectors/hosts.json`, shared with the interface.
 #[test]
-fn blocked_hosts_cover_every_alias_of_the_domain() {
-    let hosts = blocked_hosts(&sites(&["tiktok.com"]));
-    let expected: BTreeSet<String> = [
-        "tiktok.com",
-        "www.tiktok.com",
-        "m.tiktok.com",
-        "mobile.tiktok.com",
-        "old.tiktok.com",
-        "new.tiktok.com",
-        "music.tiktok.com",
-        "i.tiktok.com",
-        "amp.tiktok.com",
-    ]
-    .map(str::to_owned)
-    .into();
-    assert_eq!(hosts, expected);
-    assert_eq!(ALIAS_PREFIXES, EXPECTED_PREFIXES);
+fn each_site_is_written_with_the_aliases_it_serves_its_pages_from() {
+    let vectors: HostsVectors = serde_json::from_str(HOSTS_VECTORS).unwrap();
+    for (site, expected) in vectors.hosts {
+        let expected: BTreeSet<String> = expected.into_iter().collect();
+        assert_eq!(blocked_hosts(&sites(&[&site])), expected, "{site}");
+    }
+}
+
+#[test]
+fn every_site_with_aliases_of_its_own_has_a_vector() {
+    let vectors: HostsVectors = serde_json::from_str(HOSTS_VECTORS).unwrap();
+    for (site, _) in SITE_ALIASES {
+        assert!(
+            vectors.hosts.iter().any(|(listed, _)| listed == site),
+            "{site}"
+        );
+    }
+}
+
+#[test]
+fn a_site_blocks_exactly_the_hosts_it_is_written_with() {
+    let vectors: HostsVectors = serde_json::from_str(HOSTS_VECTORS).unwrap();
+    for (site, expected) in vectors.hosts {
+        let site = Domain::parse(&site).unwrap();
+        for host in &expected {
+            assert!(
+                blocks(&site, &Domain::parse(host).unwrap()),
+                "{site} {host}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_site_leaves_its_other_subdomains_reachable() {
+    let youtube = Domain::parse("youtube.com").unwrap();
+    for host in ["music.youtube.com", "studio.youtube.com", "notyoutube.com"] {
+        assert!(!blocks(&youtube, &Domain::parse(host).unwrap()), "{host}");
+    }
 }
 
 #[test]
 fn blocked_hosts_are_the_union_over_all_sites() {
-    let hosts = blocked_hosts(&sites(&["a.com", "m.a.com"]));
-    assert_eq!(hosts.len(), 17);
-    assert!(hosts.contains("m.a.com") && hosts.contains("m.m.a.com"));
-}
-
-#[test]
-fn aliases_longer_than_a_hostname_are_left_out() {
-    let filler = "a".repeat(63);
-    let longest = format!("{filler}.{filler}.{filler}.{}.com", "b".repeat(53));
-    assert_eq!(longest.len(), crate::MAX_DOMAIN_LEN);
-
-    let hosts = blocked_hosts(&sites(&[&longest]));
-
-    assert!(hosts.iter().all(|host| host.len() <= 253));
-    assert!(hosts.contains(&longest) && hosts.contains(&format!("www.{longest}")));
-    assert!(!hosts.contains(&format!("mobile.{longest}")));
-    assert!(!hosts.contains(&format!("music.{longest}")));
-    assert_eq!(hosts.len(), ALIAS_PREFIXES.len() - 2);
-    assert!(!render("", &sites(&[&longest])).contains("mobile."));
+    let hosts = blocked_hosts(&sites(&["a.com", "m.a.com", "shop.a.com"]));
+    let expected: BTreeSet<String> = ["a.com", "www.a.com", "m.a.com", "shop.a.com"]
+        .map(str::to_owned)
+        .into();
+    assert_eq!(hosts, expected);
 }
 
 #[test]
 fn a_start_marker_is_not_closed_by_an_end_marker_of_the_other_kind() {
     let existing =
-        "127.0.0.1 localhost\n# FOCUS-HOSTS START\n10.0.0.5 nas\n# <<< focus: managed block <<<\n";
+        "127.0.0.1 localhost\n# FOCUS-HOSTS START\n10.0.0.5 nas\n# <<< grumpo: managed block <<<\n";
     assert_eq!(
         render(existing, &BTreeSet::new()),
         "127.0.0.1 localhost\n10.0.0.5 nas\n"
@@ -305,7 +331,7 @@ fn a_glued_start_is_replaced_by_the_new_block() {
 #[test]
 fn rendering_is_idempotent_for_the_marker_edge_cases() {
     let inputs = [
-        "127.0.0.1 localhost\n# FOCUS-HOSTS START\n10.0.0.5 nas\n# <<< focus: managed block <<<\n",
+        "127.0.0.1 localhost\n# FOCUS-HOSTS START\n10.0.0.5 nas\n# <<< grumpo: managed block <<<\n",
         "10.0.0.5 nas# FOCUS-HOSTS START\n0.0.0.0 old.com\n# FOCUS-HOSTS END\n",
         "10.0.0.5 nas# FOCUS-HOSTS START\n",
     ];

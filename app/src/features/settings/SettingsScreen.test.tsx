@@ -16,6 +16,7 @@ import type { FocusStatus } from '@/ipc/generated/FocusStatus';
 import type { Permissions } from '@/ipc/generated/Permissions';
 import type { Settings } from '@/ipc/generated/Settings';
 import {
+  ALLOWED_PERMISSIONS,
   type CommandHandlers,
   connectedStatus,
   DEFAULT_PERMISSIONS,
@@ -368,24 +369,33 @@ describe('permissions', () => {
     expect(screen.queryByText('Brave')).toBeNull();
   });
 
-  it('hides a browser that has nothing to allow, such as Firefox, which Grumpo reads through Accessibility', async () => {
+  it('shows Firefox as covered by Accessibility, with nothing of its own to allow', async () => {
+    install({
+      permissions: ALLOWED_PERMISSIONS,
+    });
+    renderSettings();
+
+    const list = await screen.findByRole('list', { name: 'Permissions' });
+    const firefox = rowOf('Firefox');
+
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+    expect(firefox.textContent).toContain('Covered by Accessibility');
+    expect(firefox.querySelector('button')).toBeNull();
+    expect(screen.queryByText('Not available on this Mac')).toBeNull();
+  });
+
+  it('asks for Accessibility on the Firefox row while Accessibility is not allowed', async () => {
     install({
       permissions: {
-        accessibility: 'granted',
-        browsers: [
-          { browser: 'chrome', installed: true, permission: 'granted' },
-          { browser: 'firefox', installed: true, permission: 'unsupported' },
-          { browser: 'brave', installed: false, permission: 'notDetermined' },
-        ],
+        accessibility: 'denied',
+        browsers: [{ browser: 'firefox', installed: true, permission: 'unsupported' }],
       },
     });
     renderSettings();
 
     const list = await screen.findByRole('list', { name: 'Permissions' });
 
-    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.queryByText('Firefox')).toBeNull();
-    expect(screen.queryByText('Not available on this Mac')).toBeNull();
+    expect(within(list).getByText('Needs Accessibility')).toBeTruthy();
   });
 
   it('shows each state in words with the matching action', async () => {
@@ -439,14 +449,6 @@ describe('permissions', () => {
     expect(within(path).getByText('Privacy and Security')).toBeTruthy();
     expect(within(path).getByText('Accessibility')).toBeTruthy();
   });
-
-  function rowOf(name: string): HTMLElement {
-    const row = screen
-      .getAllByRole('listitem')
-      .find((candidate) => candidate.textContent.startsWith(name));
-    if (row === undefined) throw new Error(`No row for ${name}`);
-    return row;
-  }
 
   it('offers both Allow and Open System Settings when Accessibility is denied', async () => {
     install({ permissions: { accessibility: 'denied', browsers: [] } });
@@ -645,7 +647,7 @@ describe('general', () => {
     await user.click(toggle);
 
     expect(invokeMock).toHaveBeenCalledWith('update_settings', {
-      settings: { retentionDays: 90, launchAtLogin: true },
+      settings: { ...DEFAULT_SETTINGS, launchAtLogin: true },
     });
     await waitFor(() => {
       expect(
@@ -653,6 +655,23 @@ describe('general', () => {
       ).toBe('true');
     });
     expect(world.settings.launchAtLogin).toBe(true);
+  });
+
+  it('updates automatically by default and can be turned off', async () => {
+    const world = install();
+    const user = userEvent.setup();
+    renderSettings();
+    const toggle = await screen.findByRole('switch', { name: 'Update automatically' });
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+
+    await user.click(toggle);
+
+    expect(invokeMock).toHaveBeenCalledWith('update_settings', {
+      settings: { ...DEFAULT_SETTINGS, autoUpdate: false },
+    });
+    await waitFor(() => {
+      expect(world.settings.autoUpdate).toBe(false);
+    });
   });
 
   it('shows why launch at login could not be changed', async () => {
@@ -707,7 +726,7 @@ describe('history', () => {
   });
 
   it('keeps an unusual current value visible', async () => {
-    install({ settings: { retentionDays: 60, launchAtLogin: false } });
+    install({ settings: { ...DEFAULT_SETTINGS, retentionDays: 60 } });
     renderSettings();
 
     await screen.findByRole('combobox', { name: 'Keep history for' });
@@ -725,7 +744,7 @@ describe('history', () => {
     await user.selectOptions(retention(), '180');
 
     expect(invokeMock).toHaveBeenCalledWith('update_settings', {
-      settings: { retentionDays: 180, launchAtLogin: false },
+      settings: { ...DEFAULT_SETTINGS, retentionDays: 180 },
     });
     await waitFor(() => {
       expect(retention().value).toBe('180');
@@ -751,7 +770,7 @@ describe('history', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Delete older history' }));
 
     expect(invokeMock).toHaveBeenCalledWith('update_settings', {
-      settings: { retentionDays: 30, launchAtLogin: false },
+      settings: { ...DEFAULT_SETTINGS, retentionDays: 30 },
     });
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();
@@ -760,7 +779,7 @@ describe('history', () => {
   });
 
   it('names a year as a year when shortening to it', async () => {
-    install({ settings: { retentionDays: 365, launchAtLogin: false } });
+    install({ settings: { ...DEFAULT_SETTINGS, retentionDays: 365 } });
     const user = userEvent.setup();
     renderSettings();
     await screen.findByRole('combobox', { name: 'Keep history for' });
@@ -1109,7 +1128,7 @@ describe('explanations', () => {
     renderSettings();
 
     const chrome = within(
-      await screen.findByText('Google Chrome').then(() => rowByName('Google Chrome')),
+      await screen.findByText('Google Chrome').then(() => rowOf('Google Chrome')),
     );
     expect(chrome.getByText(/close a tab on a blocked site, in the frontmost window/)).toBeTruthy();
     expect(chrome.queryByText(/Blocked tabs stay open/)).toBeNull();
@@ -1165,7 +1184,7 @@ describe('explanations', () => {
   });
 });
 
-function rowByName(name: string): HTMLElement {
+function rowOf(name: string): HTMLElement {
   const row = screen.getAllByRole('listitem').find((item) => item.textContent.startsWith(name));
   if (row === undefined) throw new Error(`No row for ${name}`);
   return row;

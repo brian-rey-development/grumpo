@@ -14,7 +14,7 @@ const RESET_BODY: &str =
 const NEWER_TITLE: &str = "Update Grumpo";
 const NEWER_MESSAGE: &str = "This Mac has usage history from a newer version of Grumpo. Install the latest version of Grumpo to keep using it.";
 const FAILED_TITLE: &str = "Grumpo can't start";
-const FAILED_MESSAGE: &str = "Grumpo couldn't open its usage history. Open Grumpo again, and if that doesn't help, the log in Library/Logs/Focus says what went wrong.";
+const FAILED_MESSAGE: &str = "Grumpo couldn't open its usage history. Open Grumpo again, and if that doesn't help, the log in Library/Logs/Grumpo says what went wrong.";
 
 pub fn open_database(
     path: &Path,

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck source-path=SCRIPTDIR
-# Removes the focusd LaunchDaemon, its managed hosts block and the Grumpo login item.
+# Removes the grumpod LaunchDaemon, its managed hosts block and the Grumpo login item.
 # State and logs are kept unless --purge.
 set -euo pipefail
 
@@ -10,6 +10,8 @@ readonly SCRIPT_DIR
 source "$SCRIPT_DIR/lib/layout.sh"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
+# shellcheck source=lib/focusd.sh
+source "$SCRIPT_DIR/lib/focusd.sh"
 
 PURGE=0
 OWNER_ARG=""
@@ -20,7 +22,7 @@ usage() {
   cat <<USAGE
 usage: sudo scripts/uninstall.sh [--purge] [--owner <user|uid>]
 
-Stops focusd, removes the Grumpo block from /etc/hosts, deletes the daemon files and
+Stops grumpod, removes the Grumpo block from /etc/hosts, deletes the daemon files and
 removes the Grumpo login item of the owner, which is the user who ran sudo unless
 --owner says otherwise. State and logs are kept unless --purge is given.
 USAGE
@@ -60,14 +62,17 @@ strip_hosts() {
   # The daemon is already stopped here, which strip-hosts requires because it shares the daemon's instance lock.
   if [[ -x "$BINARY_DEST" ]]; then
     "$BINARY_DEST" strip-hosts
+  elif [[ -x "$FOCUSD_BINARY" ]]; then
+    "$FOCUSD_BINARY" strip-hosts
   else
-    warn "$BINARY_DEST is missing, remove the \"# >>> focus\" block from /etc/hosts by hand"
+    warn "$BINARY_DEST is missing, remove the \"# >>> grumpo\" block from /etc/hosts by hand"
   fi
 }
 
 remove_files() {
   step "Removing the daemon files"
   rm -f "$PLIST_DEST" "$PLIST_DEST.old" "$SOCKET" "$NEWSYSLOG_DEST" "$BINARY_DEST" "$BINARY_DEST.old"
+  remove_focusd_files
 }
 
 remove_login_item() {
@@ -93,21 +98,24 @@ remove_legacy_login_item() {
 
 purge_data() {
   step "Deleting state and logs"
-  rm -rf "$STATE_DIR" "$LOG_DIR"
+  rm -rf "$STATE_DIR" "$LOG_DIR" "${FOCUSD_DIRS[@]}"
 }
 
 main() {
   parse_args "$@"
   require_macos_root
   resolve_owner "$OWNER_ARG"
-  step "Stopping focusd"
+  step "Stopping grumpod"
   stop_daemon "$LABEL"
+  if has_focusd; then
+    stop_focusd
+  fi
   strip_hosts
   remove_files
   remove_login_item
   [[ $PURGE -eq 0 ]] || purge_data
   CURRENT_STEP="finished"
-  printf '\nfocusd is removed.\n'
+  printf '\ngrumpod is removed.\n'
   if [[ $PURGE -eq 0 ]]; then
     printf 'State kept in %s and logs in %s, add --purge to delete them.\n' "$STATE_DIR" "$LOG_DIR"
   fi

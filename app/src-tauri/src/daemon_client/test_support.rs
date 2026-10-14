@@ -1,4 +1,4 @@
-//! A scripted `focusd` on a Unix socket in a temp directory, shared by the tests of every
+//! A scripted `grumpod` on a Unix socket in a temp directory, shared by the tests of every
 //! module that talks to the daemon.
 
 use std::collections::{BTreeSet, VecDeque};
@@ -70,7 +70,7 @@ pub struct FakeDaemon {
 impl FakeDaemon {
     pub fn start() -> Self {
         let dir = tempfile::tempdir().unwrap();
-        let socket = dir.path().join("focusd.sock");
+        let socket = dir.path().join("grumpod.sock");
         let listener = UnixListener::bind(&socket).unwrap();
         let script = Arc::new(Mutex::new(Script {
             queued: VecDeque::new(),

@@ -12,8 +12,8 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{fmt, EnvFilter};
 
 const DEFAULT_LOG_FILTER: &str = "info";
-const LOG_DIR_FROM_HOME: &str = "Library/Logs/Focus";
-const LOG_FILE_PREFIX: &str = "focus";
+const LOG_DIR_FROM_HOME: &str = "Library/Logs/Grumpo";
+const LOG_FILE_PREFIX: &str = "grumpo";
 const LOG_FILE_SUFFIX: &str = "log";
 const MAX_LOG_FILES: usize = 7;
 

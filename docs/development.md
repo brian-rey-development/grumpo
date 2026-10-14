@@ -1,6 +1,6 @@
 # Development
 
-This guide covers everything needed to build, run and change Grumpo on a Mac. The project is a Cargo workspace with three members (`crates/focus-core`, `crates/focusd` and `app/src-tauri`) plus a React and TypeScript front end in `app/`.
+This guide covers everything needed to build, run and change Grumpo on a Mac. The project is a Cargo workspace with three members (`crates/focus-core`, `crates/grumpod` and `app/src-tauri`) plus a React and TypeScript front end in `app/`.
 
 ## Prerequisites
 
@@ -29,13 +29,13 @@ cargo build --workspace
 
 ## Running the app in development
 
-The app is a client of the daemon, so a development session has two parts. A daemon that runs as you against a temporary root, described in the next section, and the app, started from the `app` directory with `pnpm tauri dev`. That command starts the Vite server on port 1420 and the Tauri backend together, with hot reload for the UI and a rebuild of the Rust side when it changes. Both processes must agree on the socket path, and the app reads it from the same `FOCUSD_SOCKET` variable as the daemon, so give it to both.
+The app is a client of the daemon, so a development session has two parts. A daemon that runs as you against a temporary root, described in the next section, and the app, started from the `app` directory with `pnpm tauri dev`. That command starts the Vite server on port 1420 and the Tauri backend together, with hot reload for the UI and a rebuild of the Rust side when it changes. Both processes must agree on the socket path, and the app reads it from the same `GRUMPOD_SOCKET` variable as the daemon, so give it to both.
 
 ```sh
-FOCUSD_SOCKET=/tmp/focusd-dev.sock pnpm tauri dev
+GRUMPOD_SOCKET=/tmp/grumpod-dev.sock pnpm tauri dev
 ```
 
-Without a daemon at that path the app still starts, and it shows the Grumpo service as not installed or not responding, which is an expected state covered by the error views. Tracking, reports and the Settings screen work in that state, and nothing is blocked. A development build behaves differently from an installed one in two ways. It never registers itself as a login item, because its path is the build directory, and it logs to stderr as well as to `~/Library/Logs/Focus/`. Tracking needs the Accessibility and Automation permissions described in [privacy.md](privacy.md), and macOS attaches them to the terminal or the built binary that launched the app, so they may need to be granted again after a rebuild. Settings has a button for each one, and a grant that stays stuck is cleared with the `tccutil reset` commands in the signing section below.
+Without a daemon at that path the app still starts, and it shows the Grumpo service as not installed or not responding, which is an expected state covered by the error views. Tracking, reports and the Settings screen work in that state, and nothing is blocked. A development build behaves differently from an installed one in two ways. It never registers itself as a login item, because its path is the build directory, and it logs to stderr as well as to `~/Library/Logs/Grumpo/`. Tracking needs the Accessibility and Automation permissions described in [privacy.md](privacy.md), and macOS attaches them to the terminal or the built binary that launched the app, so they may need to be granted again after a rebuild. Settings has a button for each one, and a grant that stays stuck is cleared with the `tccutil reset` commands in the signing section below.
 
 ## Running the daemon against a temporary root
 
@@ -43,25 +43,25 @@ The daemon normally runs as root and writes the real `/etc/hosts`, which is exac
 
 | Variable | Meaning |
 |---|---|
-| `FOCUSD_STATE_DIR` | Directory holding the persisted state file |
-| `FOCUSD_HOSTS_FILE` | File treated as the hosts file, and the DNS cache is flushed only when this is the real `/etc/hosts` |
-| `FOCUSD_SOCKET` | Path of the Unix socket the daemon listens on, and the one the app connects to |
-| `FOCUSD_LOG_FILE` | Log file that the daemon keeps stdout and stderr pointed at, unset by default |
+| `GRUMPOD_STATE_DIR` | Directory holding the persisted state file |
+| `GRUMPOD_HOSTS_FILE` | File treated as the hosts file, and the DNS cache is flushed only when this is the real `/etc/hosts` |
+| `GRUMPOD_SOCKET` | Path of the Unix socket the daemon listens on, and the one the app connects to |
+| `GRUMPOD_LOG_FILE` | Log file that the daemon keeps stdout and stderr pointed at, unset by default |
 
 The first three let the daemon run as an ordinary user. The command takes `--owner-uid` as a required argument, which names the one user besides root whose connections are accepted. It must be a real, non-root user id, so `0` is rejected at parse time, and passing your own uid with `"$(id -u)"` is the right choice here. When the daemon runs as root it also hands the socket to that uid, whereas as an ordinary user it leaves the socket owned by you, so no `sudo` is needed.
 
 ```sh
 root="$(mktemp -d)"
 printf '127.0.0.1 localhost\n' > "$root/hosts"
-FOCUSD_STATE_DIR="$root/state" \
-FOCUSD_HOSTS_FILE="$root/hosts" \
-FOCUSD_SOCKET=/tmp/focusd-dev.sock \
-cargo run -p focusd -- run --owner-uid "$(id -u)"
+GRUMPOD_STATE_DIR="$root/state" \
+GRUMPOD_HOSTS_FILE="$root/hosts" \
+GRUMPOD_SOCKET=/tmp/grumpod-dev.sock \
+cargo run -p grumpod -- run --owner-uid "$(id -u)"
 ```
 
-Keep the socket path short. A Unix socket path is limited to 104 bytes on macOS, and a longer one makes the daemon, or the app, fail with the error `path must be shorter than SUN_LEN`. That is why the examples use `/tmp/focusd-dev.sock` and not a file inside the `mktemp` directory, whose name under `$TMPDIR` is already long, and why a deep checkout or a long custom `TMPDIR` can break the other form without any hint about the cause.
+Keep the socket path short. A Unix socket path is limited to 104 bytes on macOS, and a longer one makes the daemon, or the app, fail with the error `path must be shorter than SUN_LEN`. That is why the examples use `/tmp/grumpod-dev.sock` and not a file inside the `mktemp` directory, whose name under `$TMPDIR` is already long, and why a deep checkout or a long custom `TMPDIR` can break the other form without any hint about the cause.
 
-`FOCUSD_LOG_FILE` exists for the installed daemon rather than for development, so leave it unset to read the logs in your terminal. The LaunchDaemon plist sets it to `/Library/Logs/Focus/focusd.log`, which is also the file launchd uses for stdout and stderr. When the variable is set, the daemon opens that file in append mode and uses `dup2` to point its stdout and stderr at it. Every reconciler beat (15 seconds) then compares the device and inode of the path with the descriptor it holds, and when newsyslog has renamed or removed the file, the daemon opens the new one and repoints the descriptors. Without this step the daemon would keep writing into the archived file that newsyslog compresses and eventually unlinks. If the file cannot be opened at startup, the daemon logs a warning and keeps writing to stderr. The log verbosity defaults to `info` and `RUST_LOG` overrides it.
+`GRUMPOD_LOG_FILE` exists for the installed daemon rather than for development, so leave it unset to read the logs in your terminal. The LaunchDaemon plist sets it to `/Library/Logs/Grumpo/grumpod.log`, which is also the file launchd uses for stdout and stderr. When the variable is set, the daemon opens that file in append mode and uses `dup2` to point its stdout and stderr at it. Every reconciler beat (15 seconds) then compares the device and inode of the path with the descriptor it holds, and when newsyslog has renamed or removed the file, the daemon opens the new one and repoints the descriptors. Without this step the daemon would keep writing into the archived file that newsyslog compresses and eventually unlinks. If the file cannot be opened at startup, the daemon logs a warning and keeps writing to stderr. The log verbosity defaults to `info` and `RUST_LOG` overrides it.
 
 The integration tests for the daemon use the same overrides against a fresh temporary directory, so they never touch system files.
 
@@ -71,19 +71,19 @@ The subcommands are defined in `args.rs` and dispatched from `cli.rs`. A missing
 
 | Command | Behavior |
 |---|---|
-| `focusd run --owner-uid <uid>` | Loads the state, takes the instance lock, reconciles the hosts block once, binds the socket and serves until stopped. This is the command launchd runs. A state file that is damaged is set aside as `state.json.corrupt-<unix ts>` and replaced by defaults, whereas a file that cannot be read or that a newer daemon wrote makes the command exit with status 1 and leave the file alone, so launchd retries and the existing hosts block stays |
-| `focusd import-legacy <script-path>` | Reads the domain list and schedule from an old `focus-hosts` script and writes the initial state into `FOCUSD_STATE_DIR`. It does nothing when a state file already exists, because an existing state always wins, and it fails when the script has no domains |
-| `focusd strip-hosts` | Removes the current and the legacy marked blocks from the file named by `FOCUSD_HOSTS_FILE` and reports whether anything changed. `scripts/uninstall.sh` uses it |
-| `focusd ping` | Connects to `FOCUSD_SOCKET`, asks for the status and prints a line when the daemon answers with a valid protocol response, or fails with the reason. It takes no arguments and is left out of the usage text, because it is a support command for installer health checks and not something to run by hand |
+| `grumpod run --owner-uid <uid>` | Loads the state, takes the instance lock, reconciles the hosts block once, binds the socket and serves until stopped. This is the command launchd runs. A state file that is damaged is set aside as `state.json.corrupt-<unix ts>` and replaced by defaults, whereas a file that cannot be read or that a newer daemon wrote makes the command exit with status 1 and leave the file alone, so launchd retries and the existing hosts block stays |
+| `grumpod import-legacy <script-path>` | Reads the domain list and schedule from an old `focus-hosts` script and writes the initial state into `GRUMPOD_STATE_DIR`. It does nothing when a state file already exists, because an existing state always wins, and it fails when the script has no domains |
+| `grumpod strip-hosts` | Removes the current and the legacy marked blocks from the file named by `GRUMPOD_HOSTS_FILE` and reports whether anything changed. `scripts/uninstall.sh` uses it |
+| `grumpod ping` | Connects to `GRUMPOD_SOCKET`, asks for the status and prints a line when the daemon answers with a valid protocol response, or fails with the reason. It takes no arguments and is left out of the usage text, because it is a support command for installer health checks and not something to run by hand |
 
-The daemon holds an exclusive lock on `focusd.lock` inside the state directory for as long as it runs, so a second `run` fails before it touches the socket. `import-legacy` and `strip-hosts` take the same lock while they work, which means both refuse to run while a daemon is serving from the same state directory, and the error tells you to stop it first. The kernel releases the lock when the process dies, so a crash never leaves a stale one.
+The daemon holds an exclusive lock on `grumpod.lock` inside the state directory for as long as it runs, so a second `run` fails before it touches the socket. `import-legacy` and `strip-hosts` take the same lock while they work, which means both refuse to run while a daemon is serving from the same state directory, and the error tells you to stop it first. The kernel releases the lock when the process dies, so a crash never leaves a stale one.
 
 The two that edit files can be tried safely against the temporary root from above, and the legacy fixture that the importer tests use is `crates/focus-core/tests/fixtures/focus-hosts.sh`. Stop the daemon before running them, and use `ping` from another terminal while it is running.
 
 ```sh
-FOCUSD_STATE_DIR="$root/state" cargo run -p focusd -- import-legacy crates/focus-core/tests/fixtures/focus-hosts.sh
-FOCUSD_HOSTS_FILE="$root/hosts" FOCUSD_STATE_DIR="$root/state" cargo run -p focusd -- strip-hosts
-FOCUSD_SOCKET=/tmp/focusd-dev.sock cargo run -p focusd -- ping
+GRUMPOD_STATE_DIR="$root/state" cargo run -p grumpod -- import-legacy crates/focus-core/tests/fixtures/focus-hosts.sh
+GRUMPOD_HOSTS_FILE="$root/hosts" GRUMPOD_STATE_DIR="$root/state" cargo run -p grumpod -- strip-hosts
+GRUMPOD_SOCKET=/tmp/grumpod-dev.sock cargo run -p grumpod -- ping
 ```
 
 ## Quality gates
@@ -101,16 +101,16 @@ Dependency policy is checked separately with `cargo deny check`, which CI runs a
 
 ## Building a release
 
-`scripts/build-release.sh` produces the artifacts that the README tells a user to install. It builds `focusd` in release mode for this Mac's architecture, or for both Apple architectures with `--universal`, in which case it merges the two binaries with `lipo`, checks that the result holds both architectures and builds the app for `universal-apple-darwin`. It then runs `pnpm tauri build` in `app/`, signs the bundle, signs the collected `focusd`, verifies both signatures and copies `focusd`, `Grumpo.app` and the `.dmg` into `dist/release/`, which is ignored by git and is deleted and recreated by every build. If the disk image cannot be created, for instance without a GUI session, the script retries with the app bundle alone and says so. The disk image holds only the app, because the daemon needs root and is installed by `scripts/install.sh`. The shared pieces of the scripts, the paths of the installed layout, the step and failure helpers, the signing functions and the rollback logic, live in `scripts/lib/`, and the toolchain choice is explained under the prerequisites.
+`scripts/build-release.sh` produces the artifacts that the README tells a user to install. It builds `grumpod` in release mode for this Mac's architecture, or for both Apple architectures with `--universal`, in which case it merges the two binaries with `lipo`, checks that the result holds both architectures and builds the app for `universal-apple-darwin`. It then runs `pnpm tauri build` in `app/`, signs the bundle, signs the collected `grumpod`, verifies both signatures and copies `grumpod`, `Grumpo.app` and the `.dmg` into `dist/release/`, which is ignored by git and is deleted and recreated by every build. If the disk image cannot be created, for instance without a GUI session, the script retries with the app bundle alone and says so. The disk image holds only the app, because the daemon needs root and is installed by `scripts/install.sh`. The shared pieces of the scripts, the paths of the installed layout, the step and failure helpers, the signing functions and the rollback logic, live in `scripts/lib/`, and the toolchain choice is explained under the prerequisites.
 
 The two commands a person runs after a build are the following. The first appears in the README and in the service section of Settings, which shows it as `INSTALL_COMMAND` in `app/src/copy/service.ts`, and the second appears in the README and in the script output, so change them together.
 
 ```sh
-scripts/build-release.sh && sudo scripts/install.sh --binary dist/release/focusd
+scripts/build-release.sh && sudo scripts/install.sh --binary dist/release/grumpod
 rm -rf /Applications/Focus.app /Applications/Grumpo.app && ditto dist/release/Grumpo.app /Applications/Grumpo.app && open /Applications/Grumpo.app
 ```
 
-The app goes to `/Applications` because `dist/release` disappears with the next build, and because the login item stores the path of the copy that registered it. The command removes the previous copy first, because `ditto` merges into an existing bundle and a file left over from an earlier build would break the seal of the new signature. `install.sh` accepts `--owner <user|uid>` to name the account whose connections the daemon accepts, which defaults to `SUDO_UID`, the user who ran `sudo`. It takes a lock in `/var/run/focusd-install.lock` first, so a second run fails at once instead of deleting the backups of the first, and it renders the plist straight into `/Library/LaunchDaemons` and never in a temporary folder. Before it replaces anything it copies the daemon binary and its property list to `.old` files, and it copies `state.json` the same way only after the previous daemon has stopped, so a save that daemon makes while it shuts down is not lost. When a step fails the rollback unloads the new daemon and waits until launchd reports it gone, restores the three files and restarts the previous daemon, so an upgrade that goes wrong leaves the earlier version running with the earlier rules. If there was no `state.json` before the install, the rollback deletes the one the new daemon or the legacy import wrote, so that an older binary never meets a file it rejects and imported rules do not linger, and it runs `strip-hosts` and warns when that fails. After a successful install the copies are discarded.
+The app goes to `/Applications` because `dist/release` disappears with the next build, and because the login item stores the path of the copy that registered it. The command removes the previous copy first, because `ditto` merges into an existing bundle and a file left over from an earlier build would break the seal of the new signature. `install.sh` accepts `--owner <user|uid>` to name the account whose connections the daemon accepts, which defaults to `SUDO_UID`, the user who ran `sudo`. It takes a lock in `/var/run/grumpod-install.lock` first, so a second run fails at once instead of deleting the backups of the first, and it renders the plist straight into `/Library/LaunchDaemons` and never in a temporary folder. Before it replaces anything it copies the daemon binary and its property list to `.old` files, and it copies `state.json` the same way only after the previous daemon has stopped, so a save that daemon makes while it shuts down is not lost. When a step fails the rollback unloads the new daemon and waits until launchd reports it gone, restores the three files and restarts the previous daemon, so an upgrade that goes wrong leaves the earlier version running with the earlier rules. If there was no `state.json` before the install, the rollback deletes the one the new daemon or the legacy import wrote, so that an older binary never meets a file it rejects and imported rules do not linger, and it runs `strip-hosts` and warns when that fails. After a successful install the copies are discarded.
 
 ### Signing and permissions
 
@@ -118,7 +118,7 @@ macOS ties the Automation and Accessibility grants to the code signature of the 
 
 Tauri signs the bundle before it builds the disk image, so the identity is passed through the Tauri configuration for that run and `tauri.conf.json` keeps the ad hoc default. The build runs under `env -u APPLE_SIGNING_IDENTITY -u APPLE_CERTIFICATE -u APPLE_CERTIFICATE_PASSWORD`, so a variable in the environment cannot silently override the configured identity. The entitlements file `app/src-tauri/Entitlements.plist` grants `com.apple.security.automation.apple-events`, which a signed app needs before macOS will show the Automation prompt for a browser, and `Info.plist` holds the text of that prompt. After signing, the script runs `codesign --verify --deep --strict`, fails on any error, and checks that the identifier is the bundle identifier, that the signature is `Signature=adhoc` for an ad hoc build or carries `Authority=$FOCUS_SIGNING_IDENTITY` when an identity is set, and that the entitlement is present, so a build that would lose its permissions never reaches `dist/release`.
 
-The daemon is signed after it is copied into `dist/release`, with the same identity, the identifier `io.github.brian-rey-development.focusd` and the hardened runtime, and the script then checks it with `codesign --verify --strict`, the identifier, the runtime flag and the same adhoc or authority assertion. The signature lives inside the Mach-O file, so `install.sh` keeps it when it copies the binary to `/Library/PrivilegedHelperTools`, and an install with the default `target/release/focusd` still works because that binary carries the linker's ad hoc signature.
+The daemon is signed after it is copied into `dist/release`, with the same identity, the identifier `io.github.brian-rey-development.grumpod` and the hardened runtime, and the script then checks it with `codesign --verify --strict`, the identifier, the runtime flag and the same adhoc or authority assertion. The signature lives inside the Mach-O file, so `install.sh` keeps it when it copies the binary to `/Library/PrivilegedHelperTools`, and an install with the default `target/release/grumpod` still works because that binary carries the linker's ad hoc signature.
 
 When a grant gets stuck, and after every ad hoc rebuild for Accessibility, reset it and allow it again from Settings.
 
@@ -152,7 +152,7 @@ The conventions that the reviews enforce are written out in `PLAN.md`, and the s
 - Wording follows the glossary in `PLAN.md`, and the UI owns all user-facing error text, keyed by code, so a Rust `message` is a diagnostic that is logged and never shown.
 - TypeScript is strict with `noUncheckedIndexedAccess`, with no `any` and no non-null assertions, and only `src/ipc` may call `invoke`.
 - Styling uses CSS Modules with the tokens from `design/tokens.css`, animation uses shared springs from `design/motion.ts`, and every data view has loading, empty and error states.
-- pnpm is the only package manager, JavaScript direct dependencies use exact versions, and the bundle identifier `io.github.brian-rey-development.grumpo` and the daemon identifier `io.github.brian-rey-development.focusd` never change.
+- pnpm is the only package manager, JavaScript direct dependencies use exact versions, and the bundle identifier `io.github.brian-rey-development.grumpo` and the daemon identifier `io.github.brian-rey-development.grumpod` never change.
 
 ## Adding a Tauri command end to end
 

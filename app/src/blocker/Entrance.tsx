@@ -4,7 +4,7 @@ import { createContext, type ReactNode, useContext, useEffect, useState } from '
 import { duration, tween } from '@/design/motion';
 
 const RISE_OFFSET_PX = 12;
-const LAST_RISE_ORDER = 3;
+const LAST_RISE_ORDER = 2;
 const FIRST_RISE_DELAY_SECONDS = 0.25;
 const RISE_STAGGER_SECONDS = 0.05;
 const MS_PER_SECOND = 1000;

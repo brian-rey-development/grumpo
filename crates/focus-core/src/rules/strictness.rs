@@ -68,8 +68,8 @@ pub fn loosenings(old: &ValidatedRules, new: &ValidatedRules) -> Vec<Loosening> 
     found
 }
 
-// Only the domain's own hostname is compared, because the aliases of an alias such as
-// `m.youtube.com` are not real hosts, which keeps `m.youtube.com` -> `youtube.com` harmless.
+// Only the domain's own hostname is compared, so swapping `m.youtube.com` for `youtube.com` is
+// harmless, since the hosts file still lists it as an alias.
 fn removed_sites(old: &ValidatedRules, new: &ValidatedRules) -> Vec<Loosening> {
     let still_blocked = hosts::blocked_hosts(&new.blocked_sites);
     old.blocked_sites

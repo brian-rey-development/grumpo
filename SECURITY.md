@@ -10,7 +10,7 @@ Only the latest release receives security fixes while the project is at version 
 
 Grumpo is built around a root LaunchDaemon, so the reports that matter most are the ones that cross the boundary between an ordinary user and root.
 
-- The root daemon `focusd`, including how it parses and validates every request.
+- The root daemon `grumpod`, including how it parses and validates every request.
 - Its Unix socket and the peer-credential check that decides who may talk to it. Any way for a process other than root and the owning user to issue commands, or to confuse which user is asking, is in scope.
 - The installer, which runs as root after the administrator prompt, together with the uninstaller and the files they place.
 - Writing the managed block of `/etc/hosts`, including anything that lets a request corrupt the file or write outside that block.

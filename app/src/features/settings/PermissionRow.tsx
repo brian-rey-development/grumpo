@@ -1,12 +1,12 @@
 import { Button } from '@/components/Button/Button';
 import { commonCopy } from '@/copy/common';
 import { describeFailure } from '@/copy/failures';
-import { settingsCopy } from '@/features/settings/copy';
 import { type Explanation, explainCopy } from '@/features/explain/copy';
 import { ExplainedRow } from '@/features/explain/ExplainedRow';
 import { SettingsPath } from '@/features/explain/SettingsPath';
 import { StatusBadge } from '@/features/explain/StatusBadge';
 import { WhyDisclosure } from '@/features/explain/WhyDisclosure';
+import { settingsCopy } from '@/features/settings/copy';
 import type { PermissionKind } from '@/ipc/generated/PermissionKind';
 import type { PermissionStatus } from '@/ipc/generated/PermissionStatus';
 import { useOpenPermissionSettings, useRequestPermission } from '@/ipc/mutations';
@@ -39,11 +39,11 @@ function StateBadge({ status }: { status: PermissionStatus }) {
 
 function stateNote(status: PermissionStatus, kind: PermissionKind, name: string): string | null {
   if (status === 'notRunning') return copy.notRunning(name);
-  if (status === 'denied' && kind.kind === 'automation') return copy.deniedHint.browser;
-  return null;
+  if (status !== 'denied') return null;
+  return kind.kind === 'automation' ? copy.deniedHint.browser : copy.deniedHint.accessibility;
 }
 
-/** A browser that is denied is changed in System Settings only, but Accessibility can be asked for again. */
+/** A denied browser is changed in System Settings only, but Accessibility can be asked again. */
 function offersAllow(status: PermissionStatus, kind: PermissionKind): boolean {
   return status === 'notDetermined' || (status === 'denied' && kind.kind === 'accessibility');
 }
@@ -52,7 +52,6 @@ function needsSystemSettingsPath(status: PermissionStatus, kind: PermissionKind)
   return kind.kind === 'accessibility' && (status === 'notDetermined' || status === 'denied');
 }
 
-/** One permission with its own pending state and failure, so a slow row never holds up the others. */
 export function PermissionRow({ name, kind, status }: PermissionRowProps) {
   const request = useRequestPermission();
   const openSettings = useOpenPermissionSettings();

@@ -64,21 +64,20 @@ describe('what counts as a loosening', () => {
     expect(describeLoosening(saved, withSites('m.youtube.com'))).toBe('Remove youtube.com.');
   });
 
-  it.each([
-    'youtube.com',
-    'www.youtube.com',
-    'm.youtube.com',
-    'mobile.youtube.com',
-    'old.youtube.com',
-    'new.youtube.com',
-    'music.youtube.com',
-    'i.youtube.com',
-    'amp.youtube.com',
-  ])('keeps %s blocked while youtube.com stays on the list, as the hosts file does', (removed) => {
-    expect(describeLoosening(withSites(removed), withSites('youtube.com'))).toBeNull();
-  });
+  it.each(['youtube.com', 'www.youtube.com', 'm.youtube.com'])(
+    'keeps %s blocked while youtube.com stays on the list, as the hosts file does',
+    (removed) => {
+      expect(describeLoosening(withSites(removed), withSites('youtube.com'))).toBeNull();
+    },
+  );
 
-  it.each(['studio.youtube.com', 'a.b.youtube.com', 'www.music.youtube.com'])(
+  it.each([
+    'studio.youtube.com',
+    'a.b.youtube.com',
+    'music.youtube.com',
+    'old.youtube.com',
+    'mobile.youtube.com',
+  ])(
     'counts %s as unblocked when only youtube.com stays, because the hosts file has no wildcards',
     (removed) => {
       expect(describeLoosening(withSites(removed), withSites('youtube.com'))).toBe(

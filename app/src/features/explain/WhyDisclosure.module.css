@@ -21,6 +21,10 @@
   display: flex;
 }
 
+.panel {
+  overflow: hidden;
+}
+
 .list {
   display: flex;
   flex-direction: column;

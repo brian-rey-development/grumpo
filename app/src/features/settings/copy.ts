@@ -45,6 +45,14 @@ export const settingsCopy = {
     notRunning: (browser: string) => `Open ${browser} to check access.`,
     deniedHint: {
       browser: 'Turn Grumpo on under Privacy and Security, then Automation.',
+      accessibility:
+        'Already on in System Settings? Choose Allow, and Grumpo replaces the entry an older version left behind.',
+    },
+    firefox: {
+      covered: 'Covered by Accessibility',
+      needsAccessibility: 'Needs Accessibility',
+      detail:
+        "Grumpo reads the site of the tab you're on in Firefox through Accessibility, so there's nothing else to allow. Blocked sites won't load, and Grumpo's screen covers them, but the tab stays open.",
     },
     loadFailed: "Grumpo couldn't read its permissions.",
     actionFailed: (name: string) => `${name} couldn't be changed.`,
@@ -60,7 +68,11 @@ export const settingsCopy = {
     title: 'General',
     launchAtLogin: 'Launch at login',
     launchAtLoginDetail: 'Open Grumpo when you log in, so blocking and tracking start right away.',
-    failed: "Launch at login couldn't be changed.",
+    launchAtLoginFailed: "Launch at login couldn't be changed.",
+    autoUpdate: 'Update automatically',
+    autoUpdateDetail:
+      'Once a day, Grumpo asks GitHub for a newer version and installs it. Nothing about you is sent.',
+    autoUpdateFailed: "Automatic updates couldn't be changed.",
     welcome: 'Welcome',
     welcomeDetail: 'Walk through what Grumpo does and why he needs access, one more time.',
     showWelcome: 'Show welcome again',

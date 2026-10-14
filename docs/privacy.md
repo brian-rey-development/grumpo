@@ -1,6 +1,6 @@
 # Privacy
 
-Grumpo is a local-first tool, and the promise it makes is narrow enough to be verified in the source. It records which application was in the foreground and, for supported browsers, which website host was open, and it keeps that data on the Mac where it was collected. It makes no network calls of any kind.
+Grumpo is a local-first tool, and the promise it makes is narrow enough to be verified in the source. It records which application was in the foreground and, for supported browsers, which website host was open, and it keeps that data on the Mac where it was collected. Its only network request is a daily check for a new version, which carries none of that data.
 
 ## What is stored
 
@@ -39,7 +39,7 @@ A site installed as a web app, such as a Chrome or Edge app or a Safari web app 
 
 ## Where it lives
 
-The usage database sits in the per-user app data directory that Tauri derives from the bundle identifier, which is `~/Library/Application Support/io.github.brian-rey-development.grumpo`. The directory has mode `0700` and the database mode `0600`, so other local accounts cannot read it. The daemon state file sits in a root-owned directory with mode `0600`. The hosts block that enforcement writes lives in `/etc/hosts` between marker lines, and it contains blocked domains only, never usage data. The `focusd` socket is a local Unix socket restricted to your user and root, and it is not reachable from the network. `/etc/hosts` is readable by every account on the Mac, as it always is, so another account can read the list of blocked sites in the marked block, although it holds no usage data. The block also applies to those accounts, while only the owner of the installation can change the rules.
+The usage database sits in the per-user app data directory that Tauri derives from the bundle identifier, which is `~/Library/Application Support/io.github.brian-rey-development.grumpo`. The directory has mode `0700` and the database mode `0600`, so other local accounts cannot read it. The daemon state file sits in a root-owned directory with mode `0600`. The hosts block that enforcement writes lives in `/etc/hosts` between marker lines, and it contains blocked domains only, never usage data. The `grumpod` socket is a local Unix socket restricted to your user and root, and it is not reachable from the network. `/etc/hosts` is readable by every account on the Mac, as it always is, so another account can read the list of blocked sites in the marked block, although it holds no usage data. The block also applies to those accounts, while only the owner of the installation can change the rules.
 
 ## Retention and deletion
 
@@ -55,11 +55,11 @@ Uninstalling with `scripts/uninstall.sh` removes the daemon, the hosts block and
 
 ## Network access
 
-The app and the daemon make no network requests. There is no telemetry, no analytics, no crash reporting service, no update check and no remote asset loading, which includes favicons, so site icons are never fetched. App icons are read from the local application bundles. The webview's content security policy sets `default-src 'none'` and permits only the local Tauri IPC bridge, so a bug in the UI cannot reach the network either.
+The daemon makes no network requests, and the app makes exactly one, a check for a new version two minutes after it starts and then once a day. It is a plain HTTPS download of `latest.json` from the latest GitHub release of the project, followed by the update archive when there is a newer version, and it carries no identifier, no usage data and no settings, although GitHub sees the request the way it sees any download. Settings has a switch that turns it off. There is no telemetry, no analytics, no crash reporting service and no remote asset loading, which includes favicons, so site icons are never fetched. App icons are read from the local application bundles. The webview's content security policy sets `default-src 'none'` and permits only the local Tauri IPC bridge, so the check runs in the Rust side of the app and a bug in the UI cannot reach the network.
 
 ## Logs
 
-Both binaries log through `tracing`. At `info` and above, logs contain event names, counts, durations, error codes and phase names, but never domains and never application names. Those values may appear only at `debug` level, which is off by default and which a person enables deliberately when diagnosing a problem. Failures of the platform layer are logged with a fixed word such as `permission_denied` or `timeout` instead of the underlying message, because that message can name a browser or an address. The daemon log is at `/Library/Logs/Focus/focusd.log` and the app logs are in `~/Library/Logs/Focus/`, with seven daily files kept. Logs contain no URLs, titles or paths at any level. Notifications are the one place where an app or a site is named, because they exist to tell the person what was closed, and they are shown on the Mac and never written to a log.
+Both binaries log through `tracing`. At `info` and above, logs contain event names, counts, durations, error codes and phase names, but never domains and never application names. Those values may appear only at `debug` level, which is off by default and which a person enables deliberately when diagnosing a problem. Failures of the platform layer are logged with a fixed word such as `permission_denied` or `timeout` instead of the underlying message, because that message can name a browser or an address. The daemon log is at `/Library/Logs/Grumpo/grumpod.log` and the app logs are in `~/Library/Logs/Grumpo/`, with seven daily files kept. Logs contain no URLs, titles or paths at any level. Notifications are the one place where an app or a site is named, because they exist to tell the person what was closed, and they are shown on the Mac and never written to a log.
 
 ## Permissions requested
 
@@ -67,7 +67,7 @@ macOS gates the signals Grumpo needs behind two permissions, and the Settings sc
 
 | Permission | Why it is needed | When it is requested |
 |---|---|---|
-| Accessibility | Firefox does not expose its active tab to scripting, so Grumpo reads the URL field of the focused window through the Accessibility API as a best effort. | When the person presses the grant button for it in Settings |
+| Accessibility | Firefox does not expose its active tab to scripting, so Grumpo reads the URL field of the focused window through the Accessibility API as a best effort. Asking Firefox for its role switches on its accessibility tree, as any assistive app does. | When the person presses the grant button for it in Settings |
 | Automation (per browser) | Chrome, Brave, Edge and Safari report the active tab address through AppleScript, and macOS asks for consent once per browser. | When the person presses the grant button for that browser in Settings |
 
 Grumpo never lets macOS surprise the person with a consent dialog from a background poll. Before it runs a script against a browser it asks the system for the Automation state, which does not prompt, and it caches the answer for 30 seconds. While consent has not been given the script is skipped and the browser is reported as needing consent, and if consent was refused it is reported as denied. The dialog only appears when the person asks for it from Settings.

@@ -27,6 +27,10 @@ fn errors_map_to_reasons() {
         DaemonUnavailableReason::OtherUser
     );
     assert_eq!(
+        reason_of(&DaemonError::Renamed),
+        DaemonUnavailableReason::ServiceOutdated
+    );
+    assert_eq!(
         reason_of(&DaemonError::Protocol(String::new())),
         DaemonUnavailableReason::NotResponding
     );

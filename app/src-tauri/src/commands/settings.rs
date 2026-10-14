@@ -42,14 +42,13 @@ fn read(store: &Store, launch: &dyn LaunchAtLogin) -> Result<Settings, AppError>
     Ok(Settings {
         retention_days: store.retention_days()?.get(),
         launch_at_login,
+        auto_update: store.auto_update()?,
     })
 }
 
-/// Applies the retention first, which only touches the local database and prunes at once,
-/// and then launch at login, which the system can refuse and which is only asked when the
-/// wanted value differs from the current one. Pruning cannot be undone, so doing the step
-/// that may fail last means a refusal never leaves history deleted behind an error that
-/// claims nothing changed: `on_pruned` runs as soon as rows are gone, before that step.
+/// Launch at login goes last because the system can refuse it, and pruning cannot be undone, so
+/// a refusal must never leave history deleted behind an error that claims nothing changed.
+/// That is also why `on_pruned` runs as soon as rows are gone.
 fn apply(
     store: &Store,
     launch: &dyn LaunchAtLogin,
@@ -62,6 +61,7 @@ fn apply(
     if store.set_retention_days(retention, now)? > 0 {
         on_pruned();
     }
+    store.set_auto_update(wanted.auto_update)?;
     if launch.is_enabled()? != wanted.launch_at_login {
         launch.set_enabled(wanted.launch_at_login)?;
     }

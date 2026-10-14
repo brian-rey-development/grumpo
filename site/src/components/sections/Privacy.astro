@@ -1,5 +1,6 @@
 ---
 import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { networkNote } from '@/config/content';
 import { site } from '@/config/site';
 
 const neverStored = [
@@ -30,7 +31,8 @@ const trimmed =
   <div class="page grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
     <SectionHeading id="privacy-title" title="Privacy">
       <p>Grumpo saves the app, the domain and the time. Nothing else, and only on your Mac.</p>
-      <p>No account, no tracking, no network calls.</p>
+      <p>No account and no tracking.</p>
+      <p>{networkNote}</p>
       <p>
         <a
           href={site.docs.privacy}

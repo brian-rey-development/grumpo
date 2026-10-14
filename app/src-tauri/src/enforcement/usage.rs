@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use focus_core::LimitTarget;
+use focus_core::{hosts, LimitTarget};
 
 use crate::storage::Store;
 use crate::time::LocalDay;
@@ -143,7 +143,7 @@ fn counts_for(target: &LimitTarget, activity: &Activity) -> bool {
         LimitTarget::Site { domain } => activity
             .domain
             .as_ref()
-            .is_some_and(|visited| domain.covers(visited)),
+            .is_some_and(|visited| hosts::blocks(domain, visited)),
     }
 }
 

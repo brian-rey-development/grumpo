@@ -1,7 +1,7 @@
 import { rulesCopy } from '@/features/rules/copy';
 import { minutesLost } from '@/features/rules/coverage';
+import { hostsOf } from '@/features/rules/hosts';
 import type { RulesLocks } from '@/features/status/useRulesLocks';
-import { HOST_ALIAS_PREFIXES } from '@/ipc/generated/constants';
 import type { LimitTarget } from '@/ipc/generated/LimitTarget';
 import type { Rules } from '@/ipc/generated/Rules';
 import { formatDurationLong } from '@/lib/format';
@@ -20,7 +20,7 @@ type Loosening =
 
 /** True when blocking `kept` still blocks `domain`, which is its own host and the aliases the service adds. */
 function stillBlockedBy(kept: string, domain: string): boolean {
-  return HOST_ALIAS_PREFIXES.some((prefix) => domain === `${prefix}${kept}`);
+  return hostsOf(kept).includes(domain);
 }
 
 /** The ways `draft` blocks less than `saved`, which the service refuses while focus is on. */

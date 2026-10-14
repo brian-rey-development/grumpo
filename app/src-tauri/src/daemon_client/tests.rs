@@ -155,13 +155,13 @@ fn a_silent_daemon_times_out_within_the_budget() {
 #[test]
 fn the_socket_defaults_to_the_system_path() {
     let client = DaemonClient::from_lookup(|_| None);
-    assert_eq!(client.socket.to_str(), Some("/var/run/focusd.sock"));
+    assert_eq!(client.socket.to_str(), Some("/var/run/grumpod.sock"));
 }
 
 #[test]
-fn focusd_socket_overrides_the_default_unless_empty() {
+fn grumpod_socket_overrides_the_default_unless_empty() {
     let set = DaemonClient::from_lookup(|_| Some("/tmp/x.sock".into()));
     assert_eq!(set.socket.to_str(), Some("/tmp/x.sock"));
     let empty = DaemonClient::from_lookup(|_| Some(String::new().into()));
-    assert_eq!(empty.socket.to_str(), Some("/var/run/focusd.sock"));
+    assert_eq!(empty.socket.to_str(), Some("/var/run/grumpod.sock"));
 }

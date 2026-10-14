@@ -5,17 +5,14 @@ import { cx } from '@/lib/classNames';
 import styles from './Step.module.css';
 
 interface StepFrameProps {
-  /** The picture above the heading. */
   hero?: ReactNode;
   title: ReactNode;
   lede?: string;
   centered?: boolean;
-  /** A short header row for steps with a list, so the list fits the default window. */
   compact?: boolean;
   children?: ReactNode;
 }
 
-/** Every step is one heading, one line of context and its content, and the heading takes focus on arrival. */
 export function StepFrame({
   hero,
   title,
@@ -30,12 +27,18 @@ export function StepFrame({
     headingRef.current?.focus({ preventScroll: true });
   }, []);
 
-  return (
-    <section className={cx(styles.step, compact && styles.compact)}>
+  const header = (
+    <>
       {hero}
       <h1 ref={headingRef} className={styles.heading} tabIndex={-1}>
         {title}
       </h1>
+    </>
+  );
+
+  return (
+    <section className={cx(styles.step, compact && styles.compact)}>
+      {compact ? <div className={styles.header}>{header}</div> : header}
       {lede === undefined ? null : (
         <p className={styles.lede} data-selectable>
           {lede}

@@ -80,3 +80,22 @@ fn a_panicking_worker_is_survived() {
 
     thread.stop();
 }
+
+#[test]
+fn stopping_without_waiting_returns_before_the_worker_is_done() {
+    let finished = Arc::new(AtomicBool::new(false));
+    let flag = Arc::clone(&finished);
+    let (release, released) = std::sync::mpsc::channel::<()>();
+    let thread = StoppableThread::spawn_signalled("test-detach", move |signal| {
+        assert!(signal.wait(LONG));
+        released.recv().ok();
+        flag.store(true, Ordering::SeqCst);
+    })
+    .unwrap();
+
+    thread.stop_without_waiting();
+    assert!(!finished.load(Ordering::SeqCst));
+
+    release.send(()).unwrap();
+    eventually(|| finished.load(Ordering::SeqCst));
+}
