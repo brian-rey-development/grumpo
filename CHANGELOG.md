@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - The website, the README and the privacy document now say that the only network request is the daily update check.
 - The background service is now called `grumpod` everywhere a person can see it, including its label, binary, socket, its folders under `/Library/Application Support/Grumpo` and `/Library/Logs/Grumpo`, its environment overrides `GRUMPOD_*` and the `grumpo: managed block` markers in `/etc/hosts`, and the app logs to `~/Library/Logs/Grumpo`. Installing the service migrates a `focusd` install, carrying its rules over and replacing its hosts block, and the app shows Update service while `focusd` still runs. [ADR 0014](docs/adr/0014-the-daemon-is-renamed-grumpod.md) records the decision.
+- The hosts file lists each site with only the aliases it really serves. A registrable domain such as `youtube.com` gets `www.` and `m.`, plus `old.`, `new.` and `i.` for Reddit and `mobile.` for Facebook, Twitter and X, while a subdomain such as `m.youtube.com` is written as it is. Names that never existed, such as `m.m.facebook.com` and `music.9gag.com`, are gone, `amp.` is no longer written, and blocking YouTube no longer blocks YouTube Music, which is blocked only when it is a site of its own. [ADR 0015](docs/adr/0015-aliases-only-for-registrable-domains.md) records the decision.
 
 ### Fixed
 

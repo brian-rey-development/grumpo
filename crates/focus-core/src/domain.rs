@@ -7,9 +7,8 @@ use thiserror::Error;
 
 mod address;
 
-/// 253 minus the 4 characters of `www.`, so a domain this long can still be reached through
-/// that alias. Longer aliases such as `mobile.` are skipped for domains near the cap, because
-/// lowering it would make saved state fail validation.
+/// 253 minus the 4 characters of `www.`, from when every site was written with that alias. It
+/// stays, because lowering it would make saved state fail validation.
 pub const MAX_DOMAIN_LEN: usize = 249;
 pub const MAX_LABEL_LEN: usize = 63;
 const MIN_LABELS: usize = 2;
@@ -82,6 +81,14 @@ impl Domain {
                 .0
                 .strip_suffix(self.0.as_str())
                 .is_some_and(|prefix| prefix.ends_with('.'))
+    }
+
+    /// True for a site one label above a public suffix, such as `youtube.com` or `espn.com.ar`,
+    /// and false for a subdomain such as `m.youtube.com`.
+    pub(crate) fn is_registrable(&self) -> bool {
+        self.0
+            .split_once('.')
+            .is_some_and(|(_, parent)| !parent.contains('.') || is_bare_public_suffix(parent))
     }
 }
 

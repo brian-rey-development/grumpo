@@ -8,12 +8,16 @@ pub(crate) const MARKER_START: &str = "# >>> grumpo: managed block, do not edit 
 pub(crate) const MARKER_END: &str = "# <<< grumpo: managed block <<<";
 const IPV4_SINK: &str = "0.0.0.0";
 const IPV6_SINK: &str = "::";
-const MAX_HOSTNAME_LEN: usize = 253;
-/// The hostnames written for each blocked domain, as prefixes of it, because a hosts file has
-/// no wildcards. Each prefix is listed for IPv4 and for IPv6. They are the subdomains sites
-/// serve the same content from, which a browser would otherwise reach around the block.
-pub const ALIAS_PREFIXES: [&str; 9] = [
-    "", "www.", "m.", "mobile.", "old.", "new.", "music.", "i.", "amp.",
+/// The aliases every site is also written for, because a hosts file has no wildcards and most
+/// sites serve the same pages from these subdomains, which a browser would otherwise reach
+/// around the block.
+const COMMON_ALIASES: [&str; 2] = ["www.", "m."];
+/// Aliases that only these sites serve their pages from.
+const SITE_ALIASES: [(&str, &[&str]); 4] = [
+    ("facebook.com", &["mobile."]),
+    ("reddit.com", &["old.", "new.", "i."]),
+    ("twitter.com", &["mobile."]),
+    ("x.com", &["mobile."]),
 ];
 
 /// Rewrites a hosts file so it holds exactly one managed block for `sites`, or none when empty.
@@ -40,18 +44,27 @@ pub fn render_bytes(existing: &[u8], sites: &BTreeSet<Domain>) -> Vec<u8> {
 }
 
 /// Every hostname the managed block lists for `sites`, which a hosts file needs spelled out
-/// because it has no wildcards. An alias too long to be a hostname is left out, which only
-/// happens to sites near the length cap.
+/// because it has no wildcards.
 pub(crate) fn blocked_hosts(sites: &BTreeSet<Domain>) -> BTreeSet<String> {
-    sites
+    sites.iter().flat_map(hosts_of).collect()
+}
+
+/// A site and its aliases. Only a registrable domain gets aliases, because a subdomain such as
+/// `m.youtube.com` or `store.steampowered.com` has none of its own.
+fn hosts_of(site: &Domain) -> Vec<String> {
+    let mut hosts = vec![site.to_string()];
+    if site.is_registrable() {
+        hosts.extend(alias_prefixes(site.as_str()).map(|prefix| format!("{prefix}{site}")));
+    }
+    hosts
+}
+
+fn alias_prefixes(site: &str) -> impl Iterator<Item = &'static str> + '_ {
+    let own = SITE_ALIASES
         .iter()
-        .flat_map(|site| {
-            ALIAS_PREFIXES
-                .iter()
-                .map(move |prefix| format!("{prefix}{site}"))
-        })
-        .filter(|host| host.len() <= MAX_HOSTNAME_LEN)
-        .collect()
+        .filter(move |(domain, _)| *domain == site)
+        .flat_map(|(_, prefixes)| prefixes.iter().copied());
+    COMMON_ALIASES.into_iter().chain(own)
 }
 
 fn managed_block(sites: &BTreeSet<Domain>) -> String {

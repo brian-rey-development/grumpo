@@ -18,3 +18,4 @@ These records capture the decisions that shape Grumpo and the reasons behind the
 | [0012](0012-grumpo-rebrand-and-block-screen.md) | The product becomes Grumpo and blocks get a screen, while identifiers keep their names | Accepted | 2026-10-12 |
 | [0013](0013-self-signed-releases-and-automatic-updates.md) | Releases carry a self-signed certificate and the app updates itself once a day | Accepted | 2026-10-13 |
 | [0014](0014-the-daemon-is-renamed-grumpod.md) | The daemon is renamed grumpod, and the installer migrates focusd | Accepted | 2026-10-13 |
+| [0015](0015-aliases-only-for-registrable-domains.md) | Only a registrable domain is written with aliases, and only with the aliases it serves | Accepted | 2026-10-13 |

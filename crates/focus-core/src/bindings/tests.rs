@@ -29,14 +29,6 @@ fn the_core_constants_follow_the_rust_values() {
 }
 
 #[test]
-fn the_host_alias_prefixes_are_exported_in_order() {
-    let text = render(&core_constants());
-    assert!(text.contains(
-        "export const HOST_ALIAS_PREFIXES = [\"\", \"www.\", \"m.\", \"mobile.\", \"old.\", \"new.\", \"music.\", \"i.\", \"amp.\"] as const;"
-    ));
-}
-
-#[test]
 fn every_core_constant_has_a_unique_name() {
     let constants = core_constants();
     let mut names: Vec<&str> = constants.iter().map(|constant| constant.name).collect();

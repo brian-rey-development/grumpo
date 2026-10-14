@@ -7,7 +7,6 @@ use std::fmt::Write as _;
 use std::fs;
 use std::io;
 
-use crate::hosts;
 use crate::time::units;
 use crate::{
     CONFIRM_WINDOW_MINUTES, COOLDOWN_STEPS_MINUTES, MAX_APPS, MAX_DOMAIN_LEN, MAX_LABEL_LEN,
@@ -106,7 +105,6 @@ pub fn core_constants() -> Vec<Constant> {
         rule_limits(),
         unlock_timings(),
         domain_lengths(),
-        host_aliases(),
         units_of_time(),
     ]
     .concat()
@@ -180,14 +178,6 @@ fn domain_lengths() -> Vec<Constant> {
             usize_value(MAX_LABEL_LEN),
         ),
     ]
-}
-
-fn host_aliases() -> Vec<Constant> {
-    vec![Constant::strings(
-        "HOST_ALIAS_PREFIXES",
-        "The prefixes a blocked site is also written for in the hosts file.",
-        &hosts::ALIAS_PREFIXES,
-    )]
 }
 
 fn units_of_time() -> Vec<Constant> {

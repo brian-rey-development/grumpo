@@ -32,7 +32,7 @@ function extractHost(input: string): string {
 }
 
 /** Suffixes like `co.uk` or `com.ar` that no one owns, so blocking one would cut off every site under it. */
-function isBarePublicSuffix(host: string): boolean {
+export function isBarePublicSuffix(host: string): boolean {
   const dot = host.indexOf('.');
   if (dot === -1) return false;
   const secondLevel = host.slice(0, dot);

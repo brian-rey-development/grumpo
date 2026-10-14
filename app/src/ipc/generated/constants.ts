@@ -33,9 +33,6 @@ export const MAX_DOMAIN_LEN = 249;
 /** Most characters between two dots of a blocked site. */
 export const MAX_LABEL_LEN = 63;
 
-/** The prefixes a blocked site is also written for in the hosts file. */
-export const HOST_ALIAS_PREFIXES = ["", "www.", "m.", "mobile.", "old.", "new.", "music.", "i.", "amp."] as const;
-
 /** Seconds in a minute. */
 export const SECONDS_PER_MINUTE = 60;
 
