@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-14
+
 ### Fixed
 
 - Grumpo reads the site you're on in Firefox. Firefox builds the interface tree that Accessibility reads only after an app asks for its role, which Grumpo never did, so every Firefox window looked empty, Firefox time was counted per app only and blocked sites in Firefox were left to the hosts file alone.
@@ -113,6 +115,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Shortening the retention period deletes older history as soon as the change is saved, and Delete history keeps today's usage only while limits are configured or the service cannot be reached.
 - Logs at `info` and above never contain domains or app names.
 
-[Unreleased]: https://github.com/brian-rey-development/grumpo/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/brian-rey-development/grumpo/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/brian-rey-development/grumpo/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/brian-rey-development/grumpo/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/brian-rey-development/grumpo/releases/tag/v0.1.0
