@@ -79,8 +79,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: scripts/package-update.sh
 
-      # A draft keeps the site and installed copies from seeing the release until someone checks it.
-      # Publishing it triggers the Site workflow.
+      # A draft keeps the download link and installed copies from seeing the release until someone
+      # checks it.
       - name: Create a draft release
         if: github.event_name == 'push'
         env:
