@@ -279,6 +279,24 @@ fn a_corrupt_state_file_is_set_aside_and_the_daemon_still_starts() {
 }
 
 #[test]
+fn a_damaged_state_file_does_not_lift_the_block_that_was_in_force() {
+    let sandbox = Sandbox::new();
+    let first = sandbox.start();
+    first
+        .request(&update(always_on_rules(&["youtube.com"])))
+        .unwrap();
+    first.stop();
+    fs::write(sandbox.state_dir().join("state.json"), "{ broken").unwrap();
+
+    let restarted = sandbox.start();
+
+    assert!(sandbox.hosts_content().contains("0.0.0.0 youtube.com\n"));
+    let status = restarted.request(&Request::Status).unwrap();
+    assert!(status.rules.blocked_sites.is_empty());
+    assert_eq!(status.held_sites.len(), 1);
+}
+
+#[test]
 fn a_stale_socket_file_does_not_prevent_startup() {
     let sandbox = Sandbox::new();
     let first = sandbox.start();

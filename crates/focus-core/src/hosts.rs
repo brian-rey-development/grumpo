@@ -43,6 +43,52 @@ pub fn render_bytes(existing: &[u8], sites: &BTreeSet<Domain>) -> Vec<u8> {
     content
 }
 
+/// The sites a closed managed block in `existing` blocks, so a daemon that lost its rules can
+/// keep them in force. Aliases are folded back into the site that lists them, which renders
+/// the same block again. Legacy blocks and a block that never closes are not read, because
+/// rendering does not keep them either.
+pub fn managed_sites(existing: &[u8]) -> BTreeSet<Domain> {
+    let hosts: BTreeSet<Domain> = managed_lines(existing)
+        .into_iter()
+        .filter_map(sink_host)
+        .collect();
+    let is_alias = |host: &Domain| hosts.iter().any(|site| site != host && blocks(site, host));
+    hosts
+        .iter()
+        .filter(|host| !is_alias(host))
+        .cloned()
+        .collect()
+}
+
+/// The lines inside closed current-marker blocks. A start marker met while a block is open
+/// abandons it, the way [`render_bytes`] treats the earlier marker as a lone line.
+fn managed_lines(existing: &[u8]) -> Vec<&[u8]> {
+    let mut closed = Vec::new();
+    let mut open: Option<Vec<&[u8]>> = None;
+    for line in existing
+        .split(|byte| *byte == b'\n')
+        .map(<[u8]>::trim_ascii)
+    {
+        match (line, open.as_mut()) {
+            (start, _) if start == MARKER_START.as_bytes() => open = Some(Vec::new()),
+            (end, Some(_)) if end == MARKER_END.as_bytes() => {
+                closed.extend(open.take().unwrap_or_default());
+            }
+            (content, Some(lines)) => lines.push(content),
+            (_, None) => {}
+        }
+    }
+    closed
+}
+
+fn sink_host(line: &[u8]) -> Option<Domain> {
+    let rest = line.strip_prefix(IPV4_SINK.as_bytes())?;
+    if !rest.first()?.is_ascii_whitespace() {
+        return None;
+    }
+    Domain::parse(std::str::from_utf8(rest).ok()?).ok()
+}
+
 /// Every hostname the managed block lists for `sites`, which a hosts file needs spelled out
 /// because it has no wildcards.
 pub(crate) fn blocked_hosts(sites: &BTreeSet<Domain>) -> BTreeSet<String> {

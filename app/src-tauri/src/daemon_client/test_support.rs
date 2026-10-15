@@ -39,6 +39,7 @@ pub fn daemon_status() -> DaemonStatus {
             sentence: String::new(),
             durations: Vec::new(),
         },
+        held_sites: BTreeSet::new(),
     }
 }
 
@@ -130,7 +131,9 @@ fn serve(listener: &UnixListener, script: &Mutex<Script>, stopping: &AtomicBool)
         if stopping.load(Ordering::SeqCst) {
             return;
         }
-        let reply = next_reply(&stream, script);
+        let Some(reply) = next_reply(&stream, script) else {
+            continue;
+        };
         match reply {
             Reply::Respond(response) => deliver(&stream, &encode(&*response).unwrap()),
             Reply::Raw(bytes) => deliver(&stream, &bytes),
@@ -140,14 +143,15 @@ fn serve(listener: &UnixListener, script: &Mutex<Script>, stopping: &AtomicBool)
     }
 }
 
-fn next_reply(stream: &UnixStream, script: &Mutex<Script>) -> Reply {
-    stream.set_read_timeout(Some(REQUEST_READ_LIMIT)).unwrap();
-    let frame = read_frame(&mut BufReader::new(stream), MAX_REQUEST_BYTES).unwrap();
+/// `None` when the client left without sending a request, as one does that refuses to trust us.
+fn next_reply(stream: &UnixStream, script: &Mutex<Script>) -> Option<Reply> {
+    stream.set_read_timeout(Some(REQUEST_READ_LIMIT)).ok()?;
+    let frame = read_frame(&mut BufReader::new(stream), MAX_REQUEST_BYTES).ok()?;
     let request = decode::<Request>(&frame).unwrap();
     let mut script = script.lock_or_recover();
     script.requests.push(request);
     let fallback = script.fallback.clone();
-    script.queued.pop_front().unwrap_or(fallback)
+    Some(script.queued.pop_front().unwrap_or(fallback))
 }
 
 fn deliver(mut stream: &UnixStream, bytes: &[u8]) {

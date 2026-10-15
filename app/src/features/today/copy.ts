@@ -43,6 +43,10 @@ export const todayCopy = {
     reached: 'Limit reached',
     spoken: (used: number, limit: number) => `${formatDuration(used)} of ${formatDuration(limit)}`,
   },
+  heldSites: {
+    body: "Your saved rules couldn't be read, so Grumpo kept blocking the sites that were blocked. Add them to your rules to keep them, or unlock and save your rules to let them go.",
+    action: 'Open rules',
+  },
   banner: {
     label: 'Focus status',
     onDuty: 'On duty',

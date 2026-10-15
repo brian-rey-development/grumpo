@@ -5,10 +5,10 @@ use super::persisted::PersistedState;
 use super::{Snapshot, StateError};
 
 /// Rewrites a document of one version into the next. `MIGRATIONS[0]` upgrades v1 to v2,
-/// so adding v4 means appending one function here, and the current version follows.
+/// so adding v5 means appending one function here, and the current version follows.
 type Step = fn(Value) -> Result<Value, StateError>;
 
-const MIGRATIONS: &[Step] = &[v1_to_v2, v2_to_v3];
+const MIGRATIONS: &[Step] = &[v1_to_v2, v2_to_v3, v3_to_v4];
 
 const VERSION_KEY: &str = "schemaVersion";
 
@@ -75,6 +75,17 @@ fn v2_to_v3(mut document: Value) -> Result<Value, StateError> {
     if let Some(phase) = unlocked {
         phase.entry("minutes").or_insert_with(|| json!(longest));
     }
+    Ok(document)
+}
+
+/// Adds nothing to a v3 document, since `heldSites` is optional. The version is raised anyway
+/// because the persisted shape refuses unknown fields, so a daemon that predates the field has
+/// to see a newer version and leave the file alone instead of setting it aside as damaged.
+#[expect(
+    clippy::unnecessary_wraps,
+    reason = "must match the migration step signature"
+)]
+fn v3_to_v4(document: Value) -> Result<Value, StateError> {
     Ok(document)
 }
 

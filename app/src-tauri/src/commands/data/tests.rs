@@ -27,6 +27,7 @@ fn connected(rules: Rules) -> FocusStatus {
                 sentence: String::new(),
                 durations: Vec::new(),
             },
+            held_sites: BTreeSet::new(),
         }),
     }
 }

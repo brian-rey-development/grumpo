@@ -80,6 +80,7 @@ fn import_legacy(paths: &Paths, script: &Path) -> Result<(), CliError> {
 fn strip_hosts(paths: &Paths) -> Result<(), CliError> {
     let _lock = InstanceLock::acquire_if_initialized(&paths.state_dir)?;
     let hosts = HostsFile::new(paths.hosts_file.clone(), paths.flushes_dns());
+    hosts.remove_stale_temps();
     let write = commands::strip_hosts(&hosts).map_err(CliError::Hosts)?;
     if write.changed {
         println!("removed the managed block from the hosts file");

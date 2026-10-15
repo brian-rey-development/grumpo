@@ -94,9 +94,10 @@ fn install_code(error: &ServiceInstallError) -> CommandErrorCode {
 
 fn daemon_code(error: &DaemonError) -> CommandErrorCode {
     match error {
-        DaemonError::NotInstalled | DaemonError::NotResponding(_) | DaemonError::OtherUser => {
-            CommandErrorCode::DaemonUnavailable
-        }
+        DaemonError::NotInstalled
+        | DaemonError::NotResponding(_)
+        | DaemonError::OtherUser
+        | DaemonError::Untrusted(_) => CommandErrorCode::DaemonUnavailable,
         DaemonError::VersionMismatch { .. } | DaemonError::Renamed => {
             CommandErrorCode::VersionMismatch
         }

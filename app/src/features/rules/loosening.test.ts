@@ -232,6 +232,31 @@ describe('what is locked right now', () => {
   });
 });
 
+describe('held sites', () => {
+  const held = ['twitch.tv', 'reddit.com'];
+
+  it('counts a held site the draft does not block as a removal', () => {
+    expect(describeLocked(SAMPLE_RULES, SAMPLE_RULES, EVERYTHING_LOCKED, held)).toBe(
+      'Remove twitch.tv.',
+    );
+  });
+
+  it('is satisfied by a draft site that blocks the held one, aliases included', () => {
+    const draft = withSites('twitch.tv', 'www.reddit.com');
+
+    expect(describeLocked(draft, draft, EVERYTHING_LOCKED, held)).toBe('Remove reddit.com.');
+    expect(
+      describeLocked(draft, withSites('twitch.tv', 'reddit.com'), EVERYTHING_LOCKED, held),
+    ).toBeNull();
+  });
+
+  it('is not locked once an unlock is active', () => {
+    const unlocked: RulesLocks = { blocking: false, limits: false };
+
+    expect(describeLocked(EMPTY_RULES, EMPTY_RULES, unlocked, held)).toBeNull();
+  });
+});
+
 describe('includesLockedLimitChange', () => {
   const whileBlocking: RulesLocks = { blocking: true, limits: true };
   const limitRaise = setLimitMinutes(SAMPLE_RULES, YOUTUBE, 60);

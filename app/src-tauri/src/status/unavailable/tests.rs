@@ -1,5 +1,7 @@
 use std::io;
 
+use focus_core::ipc::peer::ServerIdentityError;
+
 use super::*;
 
 #[test]
@@ -26,6 +28,8 @@ fn errors_map_to_reasons() {
         reason_of(&DaemonError::OtherUser),
         DaemonUnavailableReason::OtherUser
     );
+    let impostor = DaemonError::Untrusted(ServerIdentityError::Impostor { uid: 502 });
+    assert_eq!(reason_of(&impostor), DaemonUnavailableReason::OtherUser);
     assert_eq!(
         reason_of(&DaemonError::Renamed),
         DaemonUnavailableReason::ServiceOutdated

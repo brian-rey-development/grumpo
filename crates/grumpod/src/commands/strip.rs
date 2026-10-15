@@ -13,7 +13,15 @@ pub fn strip_hosts(hosts_file: &impl HostsSink) -> io::Result<HostsWrite> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(HostsWrite::UNCHANGED),
         Err(error) => return Err(error),
     };
-    hosts_file.write_if_changed(&hosts::render_bytes(&existing, &BTreeSet::new()))
+    let stripped = hosts::render_bytes(&existing, &BTreeSet::new());
+    if stripped == existing {
+        return Ok(HostsWrite::UNCHANGED);
+    }
+    let flush = hosts_file.write(&stripped)?;
+    Ok(HostsWrite {
+        changed: true,
+        flush,
+    })
 }
 
 #[cfg(test)]

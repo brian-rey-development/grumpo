@@ -10,6 +10,7 @@ import { formatFullDate } from '@/lib/format';
 import { todayCopy } from './copy';
 import { DayChartSection } from './DaySections';
 import { DutyBanner } from './DutyBanner';
+import { HeldSitesNotice } from './HeldSitesNotice';
 import { TodayEmpty } from './TodayEmpty';
 import type { TodayView } from './todayModel';
 import { useLimitBars } from './useLimitBars';
@@ -31,6 +32,7 @@ export function TodayContent({ view, date, isToday, stale, onOpenSettings }: Tod
   return (
     <ScreenStack stale={stale}>
       {isToday ? <DutyBanner /> : null}
+      {isToday ? <HeldSitesNotice /> : null}
       {view.isEmpty ? (
         <TodayEmpty
           isToday={isToday}

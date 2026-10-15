@@ -1,5 +1,6 @@
 use std::io;
 
+use focus_core::ipc::peer::ServerIdentityError;
 use focus_core::ipc::{IpcCodecError, IpcError};
 
 #[derive(Debug, thiserror::Error)]
@@ -14,6 +15,8 @@ pub enum DaemonError {
     VersionMismatch { daemon: u32 },
     #[error("the Grumpo service belongs to another user")]
     OtherUser,
+    #[error("the socket is not served by the Grumpo service: {0}")]
+    Untrusted(#[from] ServerIdentityError),
     #[error("the Grumpo service rejected the request: {0}")]
     Rejected(IpcError),
     #[error("the Grumpo service broke the protocol: {0}")]

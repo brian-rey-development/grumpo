@@ -49,7 +49,7 @@ Two actions in Settings give the person control over the data. "Export data" wri
 
 Deleting `focus.db` by hand removes the history too, and it also resets the progress toward every daily limit that has not been reached yet, because that usage is stored only there. The threat model lists this among the accepted bypasses.
 
-If Grumpo finds its database damaged, it moves `focus.db` and its `-wal` and `-shm` files to `focus.db.corrupt-<unix time>` in the same folder, starts a new database and tells the person once. Those files still hold the sessions they held, and neither retention nor Delete history touches them, so delete them by hand when the old history should go. The daemon does the same with a damaged `state.json` and leaves `state.json.corrupt-<unix time>` in its state directory, which `--purge` removes.
+If Grumpo finds its database damaged, it moves `focus.db` and its `-wal` and `-shm` files to `focus.db.corrupt-<unix time>` in the same folder, starts a new database and tells the person once. Those files still hold the sessions they held, and neither retention nor Delete history touches them, so delete them by hand when the old history should go. The daemon does the same with a damaged `state.json` and leaves `state.json.corrupt-<unix time>` in its state directory, or `state.json.corrupt-last` when it cannot find a free name or move the file, and `--purge` removes both.
 
 Uninstalling with `scripts/uninstall.sh` removes the daemon, the hosts block and the Grumpo login item, and `--purge` also deletes the daemon state and logs. The script does not touch the app or the per-user data, so the database and the app logs are removed by deleting the folders named in this document.
 

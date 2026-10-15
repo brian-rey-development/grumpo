@@ -6,6 +6,7 @@ import { describeLoosening, includesLockedLimitChange } from '@/features/rules/l
 import { hasProblems } from '@/features/rules/problems';
 import { isSaveShortcut } from '@/features/rules/saveShortcut';
 import type { RulesDraft } from '@/features/rules/useRulesDraft';
+import { useHeldSites } from '@/features/status/useHeldSites';
 import { useRulesLocks } from '@/features/status/useRulesLocks';
 import { useUnlock } from '@/features/unlock/unlockContext';
 import type { CommandFailure } from '@/ipc/errors';
@@ -55,13 +56,14 @@ export function useSaveFlow(draft: RulesDraft): SaveFlow {
   const modalOpen = useIsModalOpen();
   const unlockSheet = useUnlock();
   const locks = useRulesLocks();
+  const held = useHeldSites();
   const locked = locks.blocking || locks.limits;
   const [failure, setFailure] = useState<CommandFailure | null>(null);
   const { rules, saved, dirty, readOnly, discard } = draft;
   const canSave =
     dirty && !readOnly && rules !== null && !hasProblems(rules) && !mutation.isPending;
   const summary =
-    dirty && saved !== null && rules !== null ? describeLoosening(saved, rules, locks) : null;
+    dirty && saved !== null && rules !== null ? describeLoosening(saved, rules, locks, held) : null;
   const needsUnlock = summary !== null;
   const includesLimitChange =
     dirty && saved !== null && rules !== null && includesLockedLimitChange(saved, rules, locks);

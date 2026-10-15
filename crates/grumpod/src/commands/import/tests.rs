@@ -20,7 +20,7 @@ fn imports_the_real_legacy_script_into_a_new_state() {
     };
     assert!(sites > 10);
     assert_eq!(windows, 2);
-    let saved = store.load(&now()).unwrap();
+    let saved = store.load(&now()).unwrap().unwrap();
     assert_eq!(saved.rules.blocked_sites.len(), sites);
     assert_eq!(saved.rules.schedule.windows.len(), 2);
 }

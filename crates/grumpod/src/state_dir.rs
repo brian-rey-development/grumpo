@@ -17,10 +17,12 @@ pub enum StateDirError {
 ///
 /// Every command that writes the state starts here, in this order, so the directory exists
 /// before the lock file is created in it and nothing else can write the state while the
-/// returned lock is alive.
+/// returned lock is alive. Temporary files from a save that a crash interrupted are removed
+/// once the lock is held, the only moment that is safe.
 pub fn ensure_state_dir(directory: &Path) -> Result<(FileStateStore, InstanceLock), StateDirError> {
     let store = FileStateStore::open(directory)?;
     let lock = InstanceLock::acquire(directory)?;
+    store.remove_stale_temps();
     Ok((store, lock))
 }
 

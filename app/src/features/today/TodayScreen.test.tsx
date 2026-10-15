@@ -192,6 +192,49 @@ describe('TodayScreen focus times on the chart', () => {
   });
 });
 
+describe('TodayScreen held sites', () => {
+  const NOTICE =
+    "Your saved rules couldn't be read, so Grumpo kept blocking the sites that were blocked. Add them to your rules to keep them, or unlock and save your rules to let them go.";
+
+  it('tells the user the service kept blocking after it lost the saved rules', async () => {
+    const user = userEvent.setup();
+    routeCommands(invokeMock, {
+      get_focus_status: () => connectedStatus({ heldSites: ['youtube.com'] }),
+    });
+    renderToday();
+
+    expect(await screen.findByText(NOTICE)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Open rules' }));
+
+    await waitFor(() => {
+      expect(title()).toBe('Rules');
+    });
+  });
+
+  it('stays quiet when nothing is held', async () => {
+    routeCommands(invokeMock);
+    renderToday();
+    await screen.findByText('Screen time today');
+
+    expect(screen.queryByText(NOTICE)).toBeNull();
+  });
+
+  it('stays quiet on a past day, where the banner is not shown either', async () => {
+    const user = userEvent.setup();
+    routeCommands(invokeMock, {
+      get_focus_status: () => connectedStatus({ heldSites: ['youtube.com'] }),
+    });
+    renderToday();
+    await screen.findByText(NOTICE);
+
+    await user.click(screen.getByRole('button', { name: 'Previous day' }));
+
+    await waitFor(() => {
+      expect(screen.queryByText(NOTICE)).toBeNull();
+    });
+  });
+});
+
 describe('TodayScreen daily limits', () => {
   it('shows a limit on the row of the site it limits', async () => {
     routeCommands(invokeMock, {

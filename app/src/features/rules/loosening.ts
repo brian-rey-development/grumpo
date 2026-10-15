@@ -23,9 +23,18 @@ function stillBlockedBy(kept: string, domain: string): boolean {
   return hostsOf(kept).includes(domain);
 }
 
-/** The ways `draft` blocks less than `saved`, which the service refuses while focus is on. */
-function findLoosenings(saved: Rules, draft: Rules): Loosening[] {
+/**
+ * The ways `draft` blocks less than `saved`, which the service refuses while focus is on. Held
+ * sites count as saved ones, because the service keeps them blocked and refuses to drop them
+ * with the same lock.
+ */
+function findLoosenings(saved: Rules, draft: Rules, held: readonly string[]): Loosening[] {
   const found: Loosening[] = [];
+  for (const domain of held) {
+    if (!draft.blockedSites.some((kept) => stillBlockedBy(kept, domain))) {
+      found.push({ kind: 'siteRemoved', domain });
+    }
+  }
   for (const domain of saved.blockedSites) {
     if (!draft.blockedSites.some((kept) => stillBlockedBy(kept, domain))) {
       found.push({ kind: 'siteRemoved', domain });
@@ -115,13 +124,18 @@ function isLocked(item: Loosening, locks: RulesLocks): boolean {
     : locks.blocking;
 }
 
-function lockedLoosenings(saved: Rules, draft: Rules, locks: RulesLocks): Loosening[] {
-  return findLoosenings(saved, draft).filter((item) => isLocked(item, locks));
+function lockedLoosenings(
+  saved: Rules,
+  draft: Rules,
+  locks: RulesLocks,
+  held: readonly string[],
+): Loosening[] {
+  return findLoosenings(saved, draft, held).filter((item) => isLocked(item, locks));
 }
 
 /** True when a locked loosening raises or removes a daily limit, which needs an unlock whatever the schedule. */
 export function includesLockedLimitChange(saved: Rules, draft: Rules, locks: RulesLocks): boolean {
-  return lockedLoosenings(saved, draft, locks).some(
+  return lockedLoosenings(saved, draft, locks, []).some(
     (item) => item.kind === 'limitRemoved' || item.kind === 'limitRaised',
   );
 }
@@ -129,9 +143,15 @@ export function includesLockedLimitChange(saved: Rules, draft: Rules, locks: Rul
 /**
  * One plain sentence naming what the draft loosens that is locked right now, or null when nothing
  * is. Limits are locked whatever the schedule, and the rest only while blocking is in force.
+ * `held` lists the sites the service kept blocking after losing the saved rules.
  */
-export function describeLoosening(saved: Rules, draft: Rules, locks: RulesLocks): string | null {
-  const locked = lockedLoosenings(saved, draft, locks);
+export function describeLoosening(
+  saved: Rules,
+  draft: Rules,
+  locks: RulesLocks,
+  held: readonly string[] = [],
+): string | null {
+  const locked = lockedLoosenings(saved, draft, locks, held);
   const phrases = phrasesFor(locked);
   return phrases.length === 0 ? null : joinPhrases(phrases);
 }

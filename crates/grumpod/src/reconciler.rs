@@ -6,6 +6,7 @@ use std::time::Duration;
 use tracing::error;
 
 use crate::clock::Clock;
+use crate::dns::FlushWorker;
 use crate::service::Daemon;
 use crate::shared::Shared;
 
@@ -18,8 +19,9 @@ const THREAD_NAME: &str = "reconciler";
 
 /// Re-applies the plan on a regular beat, which is what ends unlocks and rolls over days
 /// when no client is talking to the daemon. A beat is also scheduled just after each local
-/// midnight, so exhausted limits clear promptly. The resolver flush and `housekeeping` run
-/// after each beat, outside the lock.
+/// midnight, so exhausted limits clear promptly. The resolver flush is queued on `flusher`,
+/// which keeps a slow flush from delaying the next beat, and `housekeeping` runs after each
+/// beat, outside the lock.
 ///
 /// A panic in a beat is contained and logged, because nothing else would retry the work.
 /// Requests are not guarded the same way, since a client can simply ask again.
@@ -27,6 +29,7 @@ pub fn spawn<D: Daemon>(
     service: Shared<D>,
     clock: impl Clock + Send + 'static,
     interval: Duration,
+    flusher: FlushWorker,
     mut housekeeping: impl FnMut() + Send + 'static,
 ) -> io::Result<JoinHandle<()>> {
     thread::Builder::new()
@@ -34,7 +37,7 @@ pub fn spawn<D: Daemon>(
         .spawn(move || loop {
             thread::sleep(next_wait(&clock.now(), interval));
             let beat = catch_unwind(AssertUnwindSafe(|| {
-                service.with(Daemon::reconcile).run();
+                flusher.submit(service.with(Daemon::reconcile));
                 housekeeping();
             }));
             if beat.is_err() {

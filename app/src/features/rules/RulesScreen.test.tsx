@@ -343,6 +343,30 @@ describe('saving while focus is locked', () => {
     expect(daemon.saved).toHaveLength(0);
   });
 
+  it('asks for an unlock to drop a held site, because the service refuses it otherwise', async () => {
+    const daemon = installDaemon(connectedStatus({ heldSites: ['twitch.tv'] }));
+    const user = userEvent.setup();
+    renderScreen();
+    await addSite(user, 'news.com');
+
+    await user.click(await screen.findByRole('button', { name: 'Unlock to save' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Unlock focus' });
+    expect(within(dialog).getByText('Remove twitch.tv.')).toBeTruthy();
+    expect(daemon.saved).toHaveLength(0);
+  });
+
+  it('saves without an unlock when the draft keeps the held site', async () => {
+    installDaemon(connectedStatus({ heldSites: ['twitch.tv'] }));
+    const user = userEvent.setup();
+    renderScreen();
+
+    await addSite(user, 'twitch.tv');
+
+    expect(await screen.findByRole('button', { name: 'Save changes' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Unlock to save' })).toBeNull();
+  });
+
   it('names several loosened things in the sheet', async () => {
     installDaemon();
     const user = userEvent.setup();

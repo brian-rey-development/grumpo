@@ -4,11 +4,12 @@ pub(crate) mod test_support;
 #[cfg(test)]
 mod tests;
 
+use std::collections::BTreeSet;
 use std::io;
 
 use focus_core::hosts;
 use focus_core::ipc::{ErrorCode, IpcError, Request, Response};
-use focus_core::Now;
+use focus_core::{Domain, Now};
 use tracing::{debug, error, info, warn};
 
 use crate::clock::Clock;
@@ -50,14 +51,25 @@ pub struct Service<C, H, S> {
 }
 
 impl<C: Clock, H: HostsSink, S: StateStore> Service<C, H, S> {
+    /// Starts from the saved state. With none usable, it starts with empty rules and keeps the
+    /// sites the hosts block already lists in force, because an update that tightens rule
+    /// validation can leave saved rules unreadable, and dropping the block then would switch
+    /// blocking off without the user asking.
+    ///
+    /// A hosts file that cannot be read fails the start, so the supervisor retries it instead of
+    /// the daemon guessing the block away.
     pub fn new(clock: C, hosts: H, store: S) -> Result<Self, StateError> {
-        let state = store.load(&clock.now())?;
+        let now = clock.now();
+        let (state, unsaved) = match store.load(&now)? {
+            Some(state) => (state, false),
+            None => recover_without_rules(&hosts, &now)?,
+        };
         Ok(Self {
             clock,
             hosts,
             store,
             state,
-            unsaved: false,
+            unsaved,
         })
     }
 
@@ -129,30 +141,41 @@ impl<C: Clock, H: HostsSink, S: StateStore> Service<C, H, S> {
 
     fn apply_hosts(&self, now: &Now) -> PendingFlush {
         let sites = self.state.blocked_sites(now);
-        let existing = match self.hosts.read() {
-            Ok(content) => content,
-            Err(error) if error.kind() == io::ErrorKind::NotFound => Vec::new(),
-            Err(error) => {
-                error!(%error, "could not read the hosts file, leaving it alone");
-                return PendingFlush::NONE;
-            }
+        let Some(existing) = read_existing(&self.hosts) else {
+            return PendingFlush::NONE;
         };
-        match self
-            .hosts
-            .write_if_changed(&hosts::render_bytes(&existing, &sites))
-        {
-            Ok(write) if write.changed => {
-                info!(blocked_sites = sites.len(), "hosts file updated");
-                write.flush
-            }
-            Ok(_) => {
-                debug!(blocked_sites = sites.len(), "hosts file already current");
-                PendingFlush::NONE
+        let rendered = hosts::render_bytes(&existing, &sites);
+        if rendered == existing {
+            debug!(blocked_sites = sites.len(), "hosts file already current");
+            return PendingFlush::NONE;
+        }
+        self.write_hosts(&rendered, sites.len())
+    }
+
+    fn write_hosts(&self, rendered: &[u8], blocked_sites: usize) -> PendingFlush {
+        match self.hosts.write(rendered) {
+            Ok(flush) => {
+                info!(blocked_sites, "hosts file updated");
+                flush
             }
             Err(error) => {
                 error!(%error, "could not write the hosts file");
                 PendingFlush::NONE
             }
+        }
+    }
+}
+
+/// A missing hosts file counts as empty, so the block can still be written. Any other read
+/// failure leaves the file alone, because rendering over content that was never seen could
+/// drop the user's own entries.
+fn read_existing(hosts: &impl HostsSink) -> Option<Vec<u8>> {
+    match hosts.read() {
+        Ok(content) => Some(content),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Some(Vec::new()),
+        Err(error) => {
+            error!(%error, "could not read the hosts file, leaving it alone");
+            None
         }
     }
 }
@@ -188,6 +211,36 @@ where
         self.retry_unsaved();
         self.apply_hosts(&now)
     }
+}
+
+/// Empty rules holding the sites the hosts block lists, and whether they still need saving,
+/// which is the case only when there is something to hold.
+fn recover_without_rules(
+    hosts: &impl HostsSink,
+    now: &Now,
+) -> Result<(Snapshot, bool), StateError> {
+    let state = Snapshot {
+        held_sites: read_held_sites(hosts)?,
+        ..Snapshot::fresh(now)
+    };
+    let unsaved = !state.held_sites.is_empty();
+    Ok((state, unsaved))
+}
+
+fn read_held_sites(hosts: &impl HostsSink) -> Result<BTreeSet<Domain>, StateError> {
+    let existing = match hosts.read() {
+        Ok(content) => content,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(BTreeSet::new()),
+        Err(error) => return Err(StateError::HostsUnreadable(error)),
+    };
+    let held = hosts::managed_sites(&existing);
+    if !held.is_empty() {
+        warn!(
+            held_sites = held.len(),
+            "no usable saved rules, keeping the sites in the hosts block blocked until rules are saved"
+        );
+    }
+    Ok(held)
 }
 
 fn log_rejection(kind: &'static str, error: &IpcError) {

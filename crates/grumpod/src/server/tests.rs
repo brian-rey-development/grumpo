@@ -1,8 +1,9 @@
 use std::fs;
-use std::io::{BufReader, Write};
+use std::io::{self, BufReader, Write};
 use std::os::unix::fs::{MetadataExt, PermissionsExt};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::{Path, PathBuf};
+use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -12,14 +13,22 @@ use focus_core::ipc::{
 };
 use focus_core::{Exhausted, UnlockState, ValidatedRules};
 
+use super::connection::{is_authorized, PeerLookup};
 use super::{Server, ServerError};
-use crate::dns::PendingFlush;
+use crate::dns::{FlushWorker, PendingFlush};
 use crate::service::{Daemon, Handled};
 use crate::shared::Shared;
 use crate::sys;
+use focus_core::ipc::peer::ROOT_UID;
 use focus_core::test_support::now_at;
 
-struct FakeDaemon;
+const CLIENT_UID: u32 = 501;
+const STRANGER_UID: u32 = 502;
+const EXCHANGE_LIMIT: Duration = Duration::from_secs(5);
+
+struct FakeDaemon {
+    flush: PendingFlush,
+}
 
 impl Daemon for FakeDaemon {
     fn handle(&mut self, _: Request) -> Handled {
@@ -30,7 +39,10 @@ impl Daemon for FakeDaemon {
             &Exhausted::new(&now),
             &now,
         );
-        Handled::new(Response::Ok { status })
+        Handled {
+            response: Response::Ok { status },
+            flush: self.flush,
+        }
     }
 
     fn reconcile(&mut self) -> PendingFlush {
@@ -43,23 +55,39 @@ struct Running {
     socket: PathBuf,
 }
 
-fn start_for(owner_uid: u32) -> Running {
+fn start_with(
+    owner_uid: u32,
+    peer_lookup: PeerLookup,
+    flush: PendingFlush,
+    flusher: FlushWorker,
+) -> Running {
     let dir = tempfile::tempdir().unwrap();
     let socket = dir.path().join("s.sock");
-    let server = Server::bind(&socket, owner_uid).unwrap();
-    let shared = Shared::new(FakeDaemon);
+    let server = Server::bind(&socket, owner_uid)
+        .unwrap()
+        .with_peer_lookup(peer_lookup);
+    let shared = Shared::new(FakeDaemon { flush });
     thread::spawn(move || {
-        server.serve(&shared);
+        server.serve(&shared, &flusher);
     });
     Running { _dir: dir, socket }
 }
 
+fn idle_flusher() -> FlushWorker {
+    FlushWorker::with_action(|| {}).unwrap()
+}
+
+fn start_as(owner_uid: u32, peer_lookup: PeerLookup) -> Running {
+    start_with(owner_uid, peer_lookup, PendingFlush::NONE, idle_flusher())
+}
+
 fn start() -> Running {
-    start_for(sys::effective_uid())
+    start_as(CLIENT_UID, |_| Ok(CLIENT_UID))
 }
 
 fn exchange(socket: &Path, bytes: &[u8]) -> Option<Response> {
     let mut stream = UnixStream::connect(socket).unwrap();
+    stream.set_read_timeout(Some(EXCHANGE_LIMIT)).unwrap();
     let _ = stream.write_all(bytes);
     let mut reader = BufReader::new(stream);
     let frame = read_frame(&mut reader, MAX_RESPONSE_BYTES).ok()?;
@@ -138,14 +166,70 @@ fn a_silent_client_cannot_block_the_next_one_for_long() {
 }
 
 #[test]
-fn other_users_get_no_answer() {
-    let server = start_for(sys::effective_uid().wrapping_add(1));
-    assert!(
-        sys::effective_uid() != 0,
-        "this test needs an unprivileged user"
+fn the_owner_is_authorized() {
+    assert!(is_authorized(Ok(CLIENT_UID), CLIENT_UID));
+}
+
+#[test]
+fn root_is_authorized_whoever_owns_the_socket() {
+    assert!(is_authorized(Ok(ROOT_UID), CLIENT_UID));
+}
+
+#[test]
+fn another_user_is_not_authorized() {
+    assert!(!is_authorized(Ok(STRANGER_UID), CLIENT_UID));
+}
+
+#[test]
+fn a_peer_that_cannot_be_identified_is_not_authorized() {
+    assert!(!is_authorized(
+        Err(io::Error::other("no credentials")),
+        CLIENT_UID
+    ));
+}
+
+#[test]
+fn the_daemon_serves_root_and_the_owner_and_nobody_else() {
+    let owner_only = start_as(CLIENT_UID, |_| Ok(CLIENT_UID));
+    let root_client = start_as(CLIENT_UID, |_| Ok(ROOT_UID));
+    let stranger = start_as(CLIENT_UID, |_| Ok(STRANGER_UID));
+    let unidentified = start_as(CLIENT_UID, |_| Err(io::Error::other("no credentials")));
+    let request = encode(&Request::Status).unwrap();
+
+    assert!(exchange(&owner_only.socket, &request).is_some());
+    assert!(exchange(&root_client.socket, &request).is_some());
+    assert!(exchange(&stranger.socket, &request).is_none());
+    assert!(exchange(&unidentified.socket, &request).is_none());
+}
+
+#[test]
+fn the_accept_loop_does_not_wait_for_a_slow_flush() {
+    let (started, release, flusher) = blocked_flusher();
+    let server = start_with(
+        CLIENT_UID,
+        |_| Ok(CLIENT_UID),
+        PendingFlush::NEEDED,
+        flusher,
     );
-    let response = exchange(&server.socket, &encode(&Request::Status).unwrap());
-    assert!(response.is_none());
+
+    assert!(call(&server.socket, &Request::Status).into_result().is_ok());
+    started.recv_timeout(EXCHANGE_LIMIT).unwrap();
+    assert!(call(&server.socket, &Request::Status).into_result().is_ok());
+    assert!(call(&server.socket, &Request::Status).into_result().is_ok());
+
+    drop(release);
+}
+
+/// A flusher whose first run is still going until `release` is dropped.
+fn blocked_flusher() -> (mpsc::Receiver<()>, mpsc::Sender<()>, FlushWorker) {
+    let (announce, started) = mpsc::channel();
+    let (release, released) = mpsc::channel::<()>();
+    let flusher = FlushWorker::with_action(move || {
+        let _ = announce.send(());
+        let _ = released.recv();
+    })
+    .unwrap();
+    (started, release, flusher)
 }
 
 #[test]

@@ -28,6 +28,8 @@ export interface StatusOptions {
   reason?: DaemonStatus['enforcement']['reason'];
   activeUntil?: Date | null;
   exhausted?: LimitTarget[];
+  /** Sites the service kept blocking after it lost the saved rules. */
+  heldSites?: string[];
 }
 
 export function connectedStatus({
@@ -38,6 +40,7 @@ export function connectedStatus({
   reason = active ? 'schedule' : 'none',
   activeUntil = null,
   exhausted = [],
+  heldSites = [],
 }: StatusOptions = {}): FocusStatus {
   return {
     kind: 'connected',
@@ -51,6 +54,7 @@ export function connectedStatus({
         blockedApps: rules.blockedApps,
       },
       exhausted,
+      heldSites,
       unlock: { phase, nextCooldownMinutes, sentence: UNLOCK_SENTENCE, durations: [15, 30, 60] },
     },
   };

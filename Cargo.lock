@@ -1127,6 +1127,7 @@ name = "focus-core"
 version = "0.1.2"
 dependencies = [
  "chrono",
+ "libc",
  "serde",
  "serde_json",
  "thiserror 2.0.21",

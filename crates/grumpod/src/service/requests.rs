@@ -1,6 +1,10 @@
+use std::collections::BTreeSet;
+
 use chrono::NaiveDate;
 use focus_core::ipc::{IpcError, Request};
-use focus_core::{locked_loosenings, loosenings, LimitTarget, Now, Rules, UnlockState};
+use focus_core::{
+    hosts, locked_loosenings, loosenings, LimitTarget, Loosening, Now, Rules, UnlockState,
+};
 use tracing::debug;
 
 use crate::state::Snapshot;
@@ -75,19 +79,43 @@ pub fn apply(base: &Snapshot, request: Request, now: &Now) -> Result<Applied, Ip
 fn update_rules(base: &Snapshot, rules: Rules, now: &Now) -> Result<Applied, IpcError> {
     let rules = rules.validate()?;
     let found = loosenings(&base.rules, &rules);
-    let locked = locked_loosenings(&found, &base.plan(now), base.unlock.is_unlocked(now));
+    let mut locked = locked_loosenings(&found, &base.plan(now), base.unlock.is_unlocked(now));
+    let next = Snapshot {
+        rules,
+        held_sites: BTreeSet::new(),
+        ..base.clone()
+    };
+    locked.extend(locked_releases(base, &next, now));
     if !locked.is_empty() {
         return Err(IpcError::loosening_locked(&locked));
     }
-    let next = Snapshot {
-        rules,
-        ..base.clone()
-    };
-    Ok(if found.is_empty() {
+    let releases_held = !base.held_sites.is_empty();
+    Ok(if found.is_empty() && !releases_held {
         Applied::keep_on_save_failure(next)
     } else {
         Applied::require_save(next)
     })
+}
+
+/// The held sites that `next` would stop blocking while no unlock is active.
+///
+/// Held sites come from the hosts file, so they are matched the way the hosts file blocks: a
+/// new rule keeps a held site only when it lists that host or one of its aliases. A broader
+/// domain does not, which is the same rule `loosenings` applies to saved sites, so a held site
+/// cannot be dropped by a rule the hosts file would not honour. `next` has no held sites of its
+/// own, so its blocked sites are exactly what the new rules plan for `now`.
+fn locked_releases(base: &Snapshot, next: &Snapshot, now: &Now) -> Vec<Loosening> {
+    if base.unlock.is_unlocked(now) {
+        return Vec::new();
+    }
+    let kept = next.blocked_sites(now);
+    base.held_sites
+        .iter()
+        .filter(|held| !kept.iter().any(|site| hosts::blocks(site, held)))
+        .map(|domain| Loosening::SiteRemoved {
+            domain: domain.clone(),
+        })
+        .collect()
 }
 
 /// A report that no longer matches the rules or the day is stale, since the user can edit
