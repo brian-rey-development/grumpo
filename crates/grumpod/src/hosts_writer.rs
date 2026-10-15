@@ -3,7 +3,7 @@ use std::io;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 
-use crate::atomic_write::{write_atomic, Owner};
+use crate::atomic_write::{remove_stale_temps, write_atomic, Owner};
 use crate::dns::PendingFlush;
 
 const DEFAULT_MODE: u32 = 0o644;
@@ -27,8 +27,9 @@ pub trait HostsSink {
     /// The raw content, since a hosts file is not guaranteed to be UTF-8.
     fn read(&self) -> io::Result<Vec<u8>>;
 
-    /// Replaces the hosts content unless it is already identical.
-    fn write_if_changed(&self, content: &[u8]) -> io::Result<HostsWrite>;
+    /// Replaces the hosts content. Callers compare with `read` first, because a write always
+    /// goes through a temporary file and a rename, which is wasted work when nothing differs.
+    fn write(&self, content: &[u8]) -> io::Result<PendingFlush>;
 }
 
 #[derive(Debug, Clone)]
@@ -51,6 +52,14 @@ impl HostsFile {
         }
     }
 
+    /// Removes the temporary files an interrupted write left beside the hosts file. The caller
+    /// must hold the instance lock, since a write in progress would look the same.
+    pub fn remove_stale_temps(&self) {
+        if let Ok(target) = self.target() {
+            remove_stale_temps(&target);
+        }
+    }
+
     fn flush_after_write(&self) -> PendingFlush {
         if self.flush_dns {
             PendingFlush::NEEDED
@@ -65,25 +74,14 @@ impl HostsSink for HostsFile {
         fs::read(self.target()?)
     }
 
-    fn write_if_changed(&self, content: &[u8]) -> io::Result<HostsWrite> {
+    fn write(&self, content: &[u8]) -> io::Result<PendingFlush> {
         let target = self.target()?;
-        let current = match fs::read(&target) {
-            Ok(bytes) => Some(bytes),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => None,
-            Err(error) => return Err(error),
-        };
-        if current.as_deref().unwrap_or_default() == content {
-            return Ok(HostsWrite::UNCHANGED);
-        }
         let (mode, owner) = match fs::metadata(&target) {
             Ok(metadata) => (metadata.mode() & MODE_MASK, Some(Owner::of(&target)?)),
             Err(_) => (DEFAULT_MODE, None),
         };
         write_atomic(&target, content, mode, owner)?;
-        Ok(HostsWrite {
-            changed: true,
-            flush: self.flush_after_write(),
-        })
+        Ok(self.flush_after_write())
     }
 }
 

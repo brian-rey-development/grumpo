@@ -418,3 +418,66 @@ mod non_utf8 {
         );
     }
 }
+
+mod managed_sites {
+    use super::*;
+
+    #[test]
+    fn reads_back_what_was_rendered_including_aliases_and_subdomains() {
+        let blocked = sites(&["reddit.com", "m.youtube.com", "facebook.com", "a.io"]);
+        let rendered = render_bytes(BASE.as_bytes(), &blocked);
+        assert_eq!(managed_sites(&rendered), blocked);
+    }
+
+    #[test]
+    fn an_empty_or_missing_block_holds_no_sites() {
+        assert!(managed_sites(b"").is_empty());
+        assert!(managed_sites(BASE.as_bytes()).is_empty());
+    }
+
+    #[test]
+    fn a_block_that_never_closes_holds_no_sites() {
+        let unclosed = format!("{BASE}{MARKER_START}\n0.0.0.0 a.com\n:: a.com\n");
+        assert!(managed_sites(unclosed.as_bytes()).is_empty());
+    }
+
+    #[test]
+    fn a_stray_start_marker_abandons_the_earlier_unclosed_block() {
+        let nested = format!(
+            "{MARKER_START}\n0.0.0.0 orphan.com\n{MARKER_START}\n0.0.0.0 a.com\n{MARKER_END}\n"
+        );
+        assert_eq!(managed_sites(nested.as_bytes()), sites(&["a.com"]));
+    }
+
+    #[test]
+    fn lines_outside_the_block_are_ignored() {
+        let existing = format!(
+            "{BASE}0.0.0.0 outside.com\n{}0.0.0.0 after.com\n",
+            block_for(&["a.com"])
+        );
+        assert_eq!(managed_sites(existing.as_bytes()), sites(&["a.com"]));
+    }
+
+    #[test]
+    fn legacy_blocks_are_not_read() {
+        let legacy = format!(
+            "{BASE}# FOCUS-HOSTS START\n0.0.0.0 old.com\n# FOCUS-HOSTS END\n# >>> focus: managed block, do not edit >>>\n0.0.0.0 older.com\n# <<< focus: managed block <<<\n"
+        );
+        assert!(managed_sites(legacy.as_bytes()).is_empty());
+    }
+
+    #[test]
+    fn malformed_entries_inside_the_block_are_skipped() {
+        let existing = format!(
+            "{MARKER_START}\n0.0.0.0.evil.com\n0.0.0.0 \n10.0.0.1 other.com\n0.0.0.0 ok.com\n:: ipv6only.com\n0.0.0.0 \u{e9}.com\n{MARKER_END}\n"
+        );
+        assert_eq!(managed_sites(existing.as_bytes()), sites(&["ok.com"]));
+    }
+
+    #[test]
+    fn tolerates_crlf_and_invalid_utf8_around_the_block() {
+        let mut existing = b"10.0.0.5 nas\xFF\r\n".to_vec();
+        existing.extend_from_slice(block_for(&["a.com"]).replace('\n', "\r\n").as_bytes());
+        assert_eq!(managed_sites(&existing), sites(&["a.com"]));
+    }
+}

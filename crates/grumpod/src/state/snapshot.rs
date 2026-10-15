@@ -9,6 +9,11 @@ pub struct Snapshot {
     pub rules: ValidatedRules,
     pub unlock: UnlockState,
     pub exhausted: Exhausted,
+    /// Sites read back from the hosts file when no saved state could be used. They stay blocked
+    /// until the user saves rules again, because dropping them with the lost rules would end the
+    /// very blocking those rules asked for. An unlock releases them like any rule, but only for
+    /// its duration: they stay held and come back when it ends unless rules were saved meanwhile.
+    pub held_sites: BTreeSet<Domain>,
 }
 
 impl Snapshot {
@@ -17,6 +22,7 @@ impl Snapshot {
             rules: ValidatedRules::default(),
             unlock: UnlockState::new(now),
             exhausted: Exhausted::new(now),
+            held_sites: BTreeSet::new(),
         }
     }
 
@@ -27,6 +33,7 @@ impl Snapshot {
             rules: self.rules.clone(),
             unlock: self.unlock.tick(now),
             exhausted: self.exhausted.clone().roll_over(now),
+            held_sites: self.held_sites.clone(),
         }
     }
 
@@ -35,13 +42,20 @@ impl Snapshot {
     }
 
     pub fn blocked_sites(&self, now: &Now) -> BTreeSet<Domain> {
-        match self.plan(now) {
+        let planned = match self.plan(now) {
             EnforcementPlan::Active { sites, .. } => sites,
             EnforcementPlan::Inactive => BTreeSet::new(),
+        };
+        if self.unlock.is_unlocked(now) {
+            return planned;
         }
+        planned.union(&self.held_sites).cloned().collect()
     }
 
     pub fn status(&self, now: &Now) -> DaemonStatus {
-        DaemonStatus::build(&self.rules, &self.unlock, &self.exhausted, now)
+        DaemonStatus {
+            held_sites: self.held_sites.clone(),
+            ..DaemonStatus::build(&self.rules, &self.unlock, &self.exhausted, now)
+        }
     }
 }

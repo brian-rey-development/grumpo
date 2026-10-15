@@ -14,10 +14,7 @@ mod service;
 mod shared;
 mod state;
 mod state_dir;
-#[expect(
-    unsafe_code,
-    reason = "peer credentials, the effective uid and dup2 have no stable std API"
-)]
+#[expect(unsafe_code, reason = "dup2 has no stable std API")]
 mod sys;
 
 use std::process::ExitCode;

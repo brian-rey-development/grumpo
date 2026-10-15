@@ -1,4 +1,6 @@
-use focus_core::{Exhausted, Rules, UnlockState};
+use std::collections::BTreeSet;
+
+use focus_core::{Domain, Exhausted, Rules, UnlockState};
 use serde::{Deserialize, Serialize};
 
 use super::migrate::SCHEMA_VERSION;
@@ -12,6 +14,8 @@ pub(super) struct PersistedState {
     pub rules: Rules,
     pub unlock: UnlockState,
     pub exhausted: Exhausted,
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub held_sites: BTreeSet<Domain>,
 }
 
 impl From<&Snapshot> for PersistedState {
@@ -21,6 +25,7 @@ impl From<&Snapshot> for PersistedState {
             rules: Rules::clone(&snapshot.rules),
             unlock: snapshot.unlock,
             exhausted: snapshot.exhausted.clone(),
+            held_sites: snapshot.held_sites.clone(),
         }
     }
 }
@@ -33,6 +38,7 @@ impl TryFrom<PersistedState> for Snapshot {
             rules: state.rules.validate()?,
             unlock: state.unlock,
             exhausted: state.exhausted,
+            held_sites: state.held_sites,
         })
     }
 }

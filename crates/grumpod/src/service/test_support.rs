@@ -10,7 +10,7 @@ use focus_core::{Day, Domain, Limit, Rules, Schedule, TimeOfDay, UNLOCK_SENTENCE
 use crate::clock::test_support::FakeClock;
 use crate::clock::Clock;
 use crate::dns::PendingFlush;
-use crate::hosts_writer::{HostsSink, HostsWrite};
+use crate::hosts_writer::HostsSink;
 use crate::service::{Daemon, Handled, Service};
 use crate::state::{Snapshot, StateError, StateStore};
 
@@ -22,6 +22,7 @@ struct HostsInner {
     content: Vec<u8>,
     writes: usize,
     fail_reads: bool,
+    missing: bool,
     fail_writes: bool,
 }
 
@@ -65,6 +66,11 @@ impl MemoryHosts {
         self.inner().fail_reads = fail;
     }
 
+    /// Makes the file read as absent, like a machine whose hosts file was deleted.
+    pub fn set_missing(&self, missing: bool) {
+        self.inner().missing = missing;
+    }
+
     pub fn fail_writes(&self, fail: bool) {
         self.inner().fail_writes = fail;
     }
@@ -73,26 +79,23 @@ impl MemoryHosts {
 impl HostsSink for MemoryHosts {
     fn read(&self) -> io::Result<Vec<u8>> {
         let inner = self.inner();
+        if inner.missing {
+            return Err(io::ErrorKind::NotFound.into());
+        }
         if inner.fail_reads {
             return Err(io::Error::other("read failed"));
         }
         Ok(inner.content.clone())
     }
 
-    fn write_if_changed(&self, content: &[u8]) -> io::Result<HostsWrite> {
+    fn write(&self, content: &[u8]) -> io::Result<PendingFlush> {
         let mut inner = self.inner();
         if inner.fail_writes {
             return Err(io::Error::other("write failed"));
         }
-        if inner.content == content {
-            return Ok(HostsWrite::UNCHANGED);
-        }
         inner.content = content.to_vec();
         inner.writes += 1;
-        Ok(HostsWrite {
-            changed: true,
-            flush: PendingFlush::NEEDED,
-        })
+        Ok(PendingFlush::NEEDED)
     }
 }
 
@@ -129,12 +132,8 @@ impl MemoryStore {
 }
 
 impl StateStore for MemoryStore {
-    fn load(&self, now: &focus_core::Now) -> Result<Snapshot, StateError> {
-        Ok(self
-            .inner()
-            .state
-            .clone()
-            .unwrap_or_else(|| Snapshot::fresh(now)))
+    fn load(&self, _now: &focus_core::Now) -> Result<Option<Snapshot>, StateError> {
+        Ok(self.inner().state.clone())
     }
 
     fn save(&self, state: &Snapshot) -> Result<(), StateError> {

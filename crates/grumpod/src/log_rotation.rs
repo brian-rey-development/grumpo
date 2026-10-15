@@ -44,11 +44,13 @@ impl RotatingLog {
         Ok(true)
     }
 
+    /// Refuses a symlink at the log path, so root never appends to a file an attacker chose.
     fn open(path: PathBuf) -> io::Result<Self> {
         let file = OpenOptions::new()
             .create(true)
             .append(true)
             .mode(LOG_MODE)
+            .custom_flags(libc::O_NOFOLLOW)
             .open(&path)?;
         Ok(Self { path, file })
     }

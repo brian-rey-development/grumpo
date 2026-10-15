@@ -41,6 +41,7 @@ fn connected(active: bool, until: Option<i64>, phase: UnlockPhaseView) -> FocusS
                 sentence: String::new(),
                 durations: Vec::new(),
             },
+            held_sites: BTreeSet::new(),
         }),
     }
 }

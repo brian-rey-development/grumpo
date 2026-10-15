@@ -23,6 +23,9 @@ pub struct BlockEnds {
 struct Cause {
     scheduled: bool,
     exhausted: bool,
+    /// The daemon keeps this target blocked because it lost the rules that asked for it, so
+    /// the block has no schedule or limit to end it and lasts until rules are saved again.
+    held: bool,
 }
 
 impl Cause {
@@ -141,6 +144,7 @@ fn app_cause(status: &DaemonStatus, app: &AppRef) -> Cause {
             .exhausted
             .iter()
             .any(|target| matches!(target, LimitTarget::App { app: spent } if spent == app)),
+        held: false,
     }
 }
 
@@ -156,10 +160,21 @@ fn site_cause(status: &DaemonStatus, visited: &Domain) -> Cause {
             .exhausted
             .iter()
             .any(|target| matches!(target, LimitTarget::Site { domain } if hosts::blocks(domain, visited))),
+        held: status
+            .held_sites
+            .iter()
+            .any(|held| hosts::blocks(held, visited)),
     }
 }
 
 fn terms(input: &PolicyInput<'_>, status: &DaemonStatus, cause: Cause) -> Terms {
+    if cause.held {
+        return Terms {
+            until: None,
+            reason: BlockReason::Always,
+            strict: is_strict(status),
+        };
+    }
     let until = notice_end(input, status, cause);
     Terms {
         until,

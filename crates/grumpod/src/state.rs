@@ -29,6 +29,21 @@ pub enum StateError {
     UnsupportedVersion { found: u64, supported: u32 },
     #[error("state file holds rules that no longer validate: {0}")]
     InvalidRules(#[from] RulesError),
+    #[error("{} is a symlink, so the daemon will not keep its state behind it", .0.display())]
+    Symlink(PathBuf),
+    #[error(
+        "{} belongs to uid {found} and the daemon runs as uid {expected}, so it will not trust it",
+        path.display()
+    )]
+    ForeignOwner {
+        path: PathBuf,
+        found: u32,
+        expected: u32,
+    },
+    /// Without the hosts file there is no telling which sites to keep blocking, and starting
+    /// anyway would strip the managed block.
+    #[error("could not read the hosts file to keep its blocked sites: {0}")]
+    HostsUnreadable(io::Error),
 }
 
 impl StateError {
@@ -54,13 +69,14 @@ impl StateError {
 }
 
 pub trait StateStore {
-    /// Loads the saved state, or defaults when there is none.
+    /// Loads the saved state, or `None` when there is no usable one, so the caller decides what
+    /// to start from instead of this layer quietly picking empty rules.
     ///
     /// A saved state that cannot be read as one (damaged JSON, no version, rules that no longer
-    /// validate) is set aside and replaced by defaults. A state that cannot be read at all, or
-    /// that a newer daemon wrote, is an error instead, because defaults would end enforcement
-    /// while the hosts block from the saved rules still stands.
-    fn load(&self, now: &Now) -> Result<Snapshot, StateError>;
+    /// validate) is set aside and reported as `None`. A state that cannot be read at all, or
+    /// that a newer daemon wrote, is an error instead, because starting without it would end
+    /// enforcement while the hosts block from the saved rules still stands.
+    fn load(&self, now: &Now) -> Result<Option<Snapshot>, StateError>;
 
     fn save(&self, state: &Snapshot) -> Result<(), StateError>;
 }

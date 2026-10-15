@@ -91,3 +91,26 @@ fn a_log_that_cannot_be_recreated_stays_rotated_and_untouched() {
     assert!(result.is_err());
     assert!(log.is_rotated());
 }
+
+#[test]
+fn a_symlink_at_the_log_path_is_refused_and_its_target_is_untouched() {
+    let dir = tempfile::tempdir().unwrap();
+    let target = dir.path().join("victim");
+    fs::write(&target, "keep me").unwrap();
+    let path = dir.path().join("grumpod.log");
+    std::os::unix::fs::symlink(&target, &path).unwrap();
+
+    assert!(RotatingLog::attach(path).is_err());
+    assert_eq!(fs::read_to_string(&target).unwrap(), "keep me");
+}
+
+#[test]
+fn a_dangling_symlink_at_the_log_path_does_not_create_its_target() {
+    let dir = tempfile::tempdir().unwrap();
+    let target = dir.path().join("created-by-root");
+    let path = dir.path().join("grumpod.log");
+    std::os::unix::fs::symlink(&target, &path).unwrap();
+
+    assert!(RotatingLog::attach(path).is_err());
+    assert!(!target.exists());
+}

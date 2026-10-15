@@ -1,7 +1,10 @@
 use std::io;
 use std::time::{Duration, Instant};
 
+use focus_core::ipc::peer::ServerIdentityError;
 use focus_core::ipc::{ErrorCode, IpcError, Request, Response, MAX_RESPONSE_BYTES};
+
+use focus_core::test_support::site;
 
 use super::test_support::{daemon_status, FakeDaemon, Reply};
 use super::{DaemonClient, DaemonError};
@@ -16,6 +19,22 @@ fn a_status_reply_is_returned_and_the_request_arrives_intact() {
 
     assert_eq!(status, daemon_status());
     assert_eq!(daemon.requests(), [Request::Status]);
+}
+
+#[test]
+fn held_sites_in_a_reply_count_as_blocked_sites() {
+    let daemon = FakeDaemon::start();
+    let mut held = daemon_status();
+    held.held_sites = [site("youtube.com")].into();
+    daemon.push(Reply::Respond(Box::new(Response::Ok { status: held })));
+
+    let status = daemon.client().send(&Request::Status).unwrap();
+
+    assert!(status.enforcement.active);
+    assert!(status
+        .enforcement
+        .blocked_sites
+        .contains(&site("youtube.com")));
 }
 
 #[test]
@@ -164,4 +183,42 @@ fn grumpod_socket_overrides_the_default_unless_empty() {
     assert_eq!(set.socket.to_str(), Some("/tmp/x.sock"));
     let empty = DaemonClient::from_lookup(|_| Some(String::new().into()));
     assert_eq!(empty.socket.to_str(), Some("/var/run/grumpod.sock"));
+}
+
+#[test]
+fn a_service_run_by_a_stranger_is_refused_without_receiving_the_request() {
+    let daemon = FakeDaemon::start();
+    let client = DaemonClient {
+        verify: |_| Err(ServerIdentityError::Impostor { uid: 502 }),
+        ..daemon.client()
+    };
+
+    let failure = client.send(&Request::Status).unwrap_err();
+
+    assert!(matches!(failure, DaemonError::Untrusted(_)), "{failure:?}");
+    daemon.client().send(&Request::Relock).unwrap();
+    assert_eq!(daemon.requests(), [Request::Relock]);
+}
+
+#[test]
+fn a_service_that_cannot_be_identified_is_refused() {
+    let daemon = FakeDaemon::start();
+    let client = DaemonClient {
+        verify: |_| {
+            Err(ServerIdentityError::Unverifiable(io::Error::other(
+                "no credentials",
+            )))
+        },
+        ..daemon.client()
+    };
+
+    let failure = client.send(&Request::Status).unwrap_err();
+
+    assert!(matches!(failure, DaemonError::Untrusted(_)), "{failure:?}");
+}
+
+#[test]
+fn a_service_run_by_this_user_passes_the_real_check() {
+    let daemon = FakeDaemon::start();
+    assert!(daemon.client().send(&Request::Status).is_ok());
 }

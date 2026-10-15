@@ -10,9 +10,12 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
+use focus_core::ipc::peer::peer_uid;
 use thiserror::Error;
 use tracing::{info, warn};
 
+use self::connection::PeerLookup;
+use crate::dns::FlushWorker;
 use crate::service::Daemon;
 use crate::shared::Shared;
 use crate::sys;
@@ -36,6 +39,7 @@ pub enum ServerError {
 pub struct Server {
     listener: UnixListener,
     owner_uid: u32,
+    peer_lookup: PeerLookup,
 }
 
 impl Server {
@@ -56,7 +60,16 @@ impl Server {
         Ok(Self {
             listener,
             owner_uid,
+            peer_lookup: peer_uid,
         })
+    }
+
+    #[cfg(test)]
+    fn with_peer_lookup(self, peer_lookup: PeerLookup) -> Self {
+        Self {
+            peer_lookup,
+            ..self
+        }
     }
 
     /// Serves clients one at a time, forever.
@@ -66,11 +79,14 @@ impl Server {
     /// client delays others by a few seconds at most. In exchange there is no thread
     /// bookkeeping, and the service lock is taken by one party at a time anyway. The lock is
     /// held while a request is applied, which includes the state and hosts file writes, but
-    /// never during socket I/O or the resolver flush.
-    pub fn serve<D: Daemon>(&self, service: &Shared<D>) -> ! {
+    /// never during socket I/O. The resolver flush, which takes seconds, is handed to
+    /// `flusher` so it cannot hold up the next client either.
+    pub fn serve<D: Daemon>(&self, service: &Shared<D>, flusher: &FlushWorker) -> ! {
         loop {
             match self.listener.accept() {
-                Ok((stream, _)) => connection::serve(&stream, self.owner_uid, service),
+                Ok((stream, _)) => {
+                    connection::serve(&stream, self.owner_uid, self.peer_lookup, service, flusher);
+                }
                 Err(error) => {
                     warn!(%error, "could not accept a connection");
                     thread::sleep(ACCEPT_RETRY_DELAY);

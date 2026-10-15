@@ -1,6 +1,8 @@
 mod codec;
 mod envelope;
 mod error;
+#[cfg(unix)]
+pub mod peer;
 mod request;
 mod socket;
 mod status;

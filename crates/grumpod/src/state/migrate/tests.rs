@@ -1,6 +1,6 @@
 use serde_json::json;
 
-use focus_core::{AppRef, UnlockPhase};
+use focus_core::{AppRef, Domain, UnlockPhase};
 
 use super::*;
 use focus_core::test_support::now_at;
@@ -231,4 +231,29 @@ fn rejects_unknown_fields() {
     let mut document = v1_document();
     document["extra"] = json!(true);
     assert!(matches!(migrate(document), Err(StateError::Json(_))));
+}
+
+#[test]
+fn a_v3_document_loads_with_no_held_sites_and_is_stamped_v4() {
+    let upgraded = upgrade(document_at(3), MIGRATIONS).unwrap();
+    assert_eq!(upgraded[VERSION_KEY], 4);
+    assert!(migrate(document_at(3)).unwrap().held_sites.is_empty());
+}
+
+#[test]
+fn held_sites_survive_a_save_and_a_load() {
+    let held = Snapshot {
+        held_sites: [Domain::parse("youtube.com").unwrap()].into(),
+        ..Snapshot::fresh(&now_at(2026, 10, 12, 9, 0))
+    };
+    let saved = serde_json::to_value(PersistedState::from(&held)).unwrap();
+    assert_eq!(saved["heldSites"], json!(["youtube.com"]));
+    assert_eq!(migrate(saved).unwrap(), held);
+}
+
+#[test]
+fn no_held_sites_leaves_the_field_out_of_the_document() {
+    let fresh = Snapshot::fresh(&now_at(2026, 10, 12, 9, 0));
+    let saved = serde_json::to_value(PersistedState::from(&fresh)).unwrap();
+    assert!(saved.get("heldSites").is_none());
 }

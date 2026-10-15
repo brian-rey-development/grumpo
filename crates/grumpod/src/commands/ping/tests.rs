@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{Read, Write};
 use std::os::unix::net::UnixListener;
 use std::thread;
 
@@ -56,5 +56,43 @@ fn a_peer_that_hangs_up_is_a_failed_ping() {
     let (_dir, socket, listener) = listener();
     let server = thread::spawn(move || drop(listener.accept().unwrap()));
     assert!(ping(&socket).is_err());
+    server.join().unwrap();
+}
+
+#[test]
+fn a_socket_served_by_a_stranger_is_refused_before_anything_is_sent() {
+    let (_dir, socket, listener) = listener();
+    let server = thread::spawn(move || {
+        let (stream, _) = listener.accept().unwrap();
+        stream.set_nonblocking(true).unwrap();
+        let mut sent = Vec::new();
+        let _ = (&stream).read_to_end(&mut sent);
+        sent
+    });
+
+    let failure = ping_verified(&socket, |_| Err(ServerIdentityError::Impostor { uid: 502 }));
+
+    assert!(
+        matches!(failure, Err(PingError::Untrusted(_))),
+        "{failure:?}"
+    );
+    assert_eq!(server.join().unwrap(), Vec::<u8>::new());
+}
+
+#[test]
+fn a_socket_whose_server_cannot_be_identified_is_refused() {
+    let (_dir, socket, listener) = listener();
+    let server = thread::spawn(move || drop(listener.accept().unwrap()));
+
+    let failure = ping_verified(&socket, |_| {
+        Err(ServerIdentityError::Unverifiable(io::Error::other(
+            "no credentials",
+        )))
+    });
+
+    assert!(
+        matches!(failure, Err(PingError::Untrusted(_))),
+        "{failure:?}"
+    );
     server.join().unwrap();
 }

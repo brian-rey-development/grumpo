@@ -130,7 +130,7 @@ fn status_serializes_with_camel_case_keys_and_no_version() {
     let now = now_at(2026, 10, 12, 10, 0);
     let status = crate::test_support::sample_status(&now);
     let value = serde_json::to_value(&status).unwrap();
-    for key in ["rules", "enforcement", "exhausted", "unlock"] {
+    for key in ["rules", "enforcement", "exhausted", "unlock", "heldSites"] {
         assert!(value.get(key).is_some(), "missing {key}");
     }
     assert!(value.get("protocolVersion").is_none());
@@ -141,4 +141,97 @@ fn status_serializes_with_camel_case_keys_and_no_version() {
         serde_json::from_value::<DaemonStatus>(value).unwrap(),
         status
     );
+}
+
+#[test]
+fn a_status_from_a_daemon_without_held_sites_decodes_with_none() {
+    let now = now_at(2026, 10, 12, 10, 0);
+    let mut value = serde_json::to_value(crate::test_support::sample_status(&now)).unwrap();
+    value.as_object_mut().unwrap().remove("heldSites");
+    let status: DaemonStatus = serde_json::from_value(value).unwrap();
+    assert!(status.held_sites.is_empty());
+}
+
+fn idle_status() -> DaemonStatus {
+    let now = now_at(2026, 10, 14, 20, 0);
+    DaemonStatus::build(
+        &sample_rules(),
+        &UnlockState::new(&now),
+        &Exhausted::new(&now),
+        &now,
+    )
+}
+
+#[test]
+fn held_sites_make_an_idle_status_active_without_an_end() {
+    let status = DaemonStatus {
+        held_sites: [site("youtube.com")].into(),
+        ..idle_status()
+    }
+    .with_held_enforced();
+
+    assert!(status.enforcement.active);
+    assert_eq!(status.enforcement.reason, EnforcementReason::Schedule);
+    assert_eq!(status.enforcement.active_until, None);
+    assert_eq!(
+        status.enforcement.blocked_sites,
+        [site("youtube.com")].into()
+    );
+    assert_eq!(status.held_sites, [site("youtube.com")].into());
+}
+
+#[test]
+fn held_sites_join_the_sites_of_an_active_plan_and_keep_its_reason_and_end() {
+    let now = now_at(2026, 10, 12, 10, 0);
+    let plan = DaemonStatus::build(
+        &sample_rules(),
+        &UnlockState::new(&now),
+        &Exhausted::new(&now),
+        &now,
+    );
+    let held = DaemonStatus {
+        held_sites: [site("youtube.com")].into(),
+        ..plan.clone()
+    }
+    .with_held_enforced();
+
+    assert!(held
+        .enforcement
+        .blocked_sites
+        .contains(&site("youtube.com")));
+    assert!(plan
+        .enforcement
+        .blocked_sites
+        .iter()
+        .all(|planned| held.enforcement.blocked_sites.contains(planned)));
+    assert_eq!(held.enforcement.reason, plan.enforcement.reason);
+    assert_eq!(held.enforcement.active_until, plan.enforcement.active_until);
+}
+
+#[test]
+fn a_status_without_held_sites_is_left_as_it_is() {
+    let status = idle_status();
+
+    assert_eq!(status.clone().with_held_enforced(), status);
+}
+
+#[test]
+fn held_sites_are_not_counted_while_an_unlock_runs() {
+    let now = now_at(2026, 10, 12, 10, 0);
+    let running = unlock_from(json!({
+        "phase": {"kind": "unlocked", "until": now.utc() + Duration::minutes(10), "minutes": 15},
+        "unlocksToday": 1,
+        "day": "2026-10-12",
+    }));
+    let status = DaemonStatus {
+        held_sites: [site("youtube.com")].into(),
+        ..DaemonStatus::build(&sample_rules(), &running, &Exhausted::new(&now), &now)
+    };
+
+    let enforced = status.clone().with_held_enforced();
+
+    assert_eq!(enforced, status);
+    assert!(!enforced.enforcement.active);
+    assert!(enforced.enforcement.blocked_sites.is_empty());
+    assert_eq!(enforced.held_sites, [site("youtube.com")].into());
 }
