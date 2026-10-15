@@ -13,3 +13,6 @@ node_modules/
 .vercel
 /PROGRESS.md
 /site/.astro/
+
+# launch video (renders, music, node_modules)
+/video/
