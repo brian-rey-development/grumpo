@@ -48,6 +48,7 @@ pub fn run() -> ExitCode {
 
 fn build() -> tauri::Result<tauri::App> {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(on_second_instance))
         .plugin(tauri_plugin_notification::init())
         .plugin(login_item_plugin())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -85,6 +86,13 @@ fn command_handler() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'sta
         commands::block_screen::get_block_screen,
         commands::block_screen::dismiss_block_screen,
     ]
+}
+
+/// Two copies would track and enforce twice, so another start hands off to this one and exits.
+fn on_second_instance(app: &AppHandle, args: Vec<String>, _cwd: String) {
+    if !launch_at_login::was_autostarted(args.into_iter()) {
+        window::show_main(app);
+    }
 }
 
 fn login_item_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
