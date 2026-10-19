@@ -32,11 +32,11 @@ objc2-app-kit = "0.3"
 objc2-core-graphics = "0.3"
 objc2-io-kit = "0.3"
 tauri = "=2.12.3"
-tauri-build = "=2.7.2"
+tauri-build = "=2.7.3"
 tauri-plugin-notification = "=2.6.0"
 tauri-plugin-autostart = "=2.7.0"
 tauri-plugin-updater = "=2.12.0"
-tauri-plugin-single-instance = "=2.5.3"
+tauri-plugin-single-instance = "=2.5.4"
 plist = "1"
 
 [workspace.lints.rust]
